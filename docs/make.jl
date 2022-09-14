@@ -1,5 +1,10 @@
-push!(LOAD_PATH,"../src")
+push!(LOAD_PATH,"../src","../src/wave1D","../src/nbody","../src/maxwell","../src/TOV")
+
 using numex
+using Maxwell
+using Wave1D
+using NBody
+using TOV
 using Documenter
 
 DocMeta.setdocmeta!(numex, :DocTestSetup, :(using numex); recursive=true)
@@ -17,6 +22,15 @@ makedocs(;
     ),
     pages=[
         "Home" => "index.md",
+        "Examples" => Any[
+            "Euler's Method" => "euler.md",
+            "Simple Oscillator" => "sho.md",
+            "Nonlinear Oscillator" => "vanderpol.md",
+            "N-Body Gravity" => "nbody.md",
+            "Stars" => "tov.md",
+            "Wave Equation" => "wave1D.md",
+            "Maxwell" => "maxwell.md",
+        ]
     ],
 )
 
