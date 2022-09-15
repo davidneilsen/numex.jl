@@ -2,8 +2,10 @@ using Printf
 using WriteVTK
 using ArgParse
 
-include("Maxwell.jl")
-import .Maxwell
+include("Maxwell2D.jl")
+#import .Maxwell2D
+
+using .Maxwell2D
 
 function parse_commandline()
     s = ArgParseSettings()
@@ -35,7 +37,7 @@ function evolve!(fields, nt, vtkOutFreq)
     vtkFileCount::Int64 = 0
     screenOutFreq = vtkOutFreq
     filename = @sprintf("maxwell_%05d",vtkFileCount)
-    @printf("Step=%d, time=%g, |Bz|=%g\n",0,time[1],Maxwell.l2norm(fields.u[3]))
+    @printf("Step=%d, time=%g, |Bz|=%g\n",0,time[1],l2norm(fields.u[3]))
     vtk_grid(filename, fields.grid.x, fields.grid.y) do vtk
         vtk["Ex",VTKPointData()] = fields.u[1]
         vtk["Ey",VTKPointData()] = fields.u[2]
@@ -43,9 +45,9 @@ function evolve!(fields, nt, vtkOutFreq)
         vtk["time",VTKFieldData()] = time[1]
     end
     for i = 1:nt
-        Maxwell.rk2_step!(Maxwell.maxwell_TE!, fields, time)
+        rk2_step!(Maxwell2D.maxwell_TE!, fields, time)
         if (mod(i,screenOutFreq)==0)
-            @printf("Step=%d, time=%g, |Bz|=%g\n",i,time[1],Maxwell.l2norm(fields.u[3]))
+            @printf("Step=%d, time=%g, |Bz|=%g\n",i,time[1],l2norm(fields.u[3]))
         end
         if (mod(i,vtkOutFreq)==0)
             vtkFileCount += 1
@@ -71,11 +73,11 @@ function main()
     nx = ny = n
     bbox = [-10.0, 10.0, -10.0, 10.0]
     println("main:  nx = ",nx, " ny = ",ny)
-    grid = Maxwell.Grid(nx, ny, bbox, cfl)
+    grid = Grid(nx, ny, bbox, cfl)
     println("main grid:  nx = ",grid.nx, " ny = ",grid.ny)
 
-    fields = Maxwell.GridFields(3, grid)
-    Maxwell.init_data!(fields)
+    fields = GridFields(3, grid)
+    Maxwell2D.init_data!(fields)
     
     evolve!(fields, nt, VTKOutFreq)
 end
