@@ -1,4 +1,4 @@
-push!(LOAD_PATH,"../src","../src/wave1D","../src/nbody","../src/maxwell","../src/TOV")
+push!(LOAD_PATH,"../src","../src/wave1D","../src/nbody","../src/TOV","../src/maxwell")
 
 using numex
 using Maxwell
