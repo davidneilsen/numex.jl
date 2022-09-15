@@ -1,10 +1,6 @@
 push!(LOAD_PATH,"../src","../src/wave1D","../src/nbody","../src/TOV","../src/maxwell")
 
 using numex
-using Maxwell
-using Wave1D
-using NBody
-using TOV
 using Documenter
 
 DocMeta.setdocmeta!(numex, :DocTestSetup, :(using numex); recursive=true)
