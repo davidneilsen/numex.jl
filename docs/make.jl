@@ -23,7 +23,9 @@ makedocs(;
             "Simple Oscillator" => "sho.md",
             "Nonlinear Oscillator" => "vanderpol.md",
             "N-Body Gravity" => "nbody.md",
-            "Stars" => "tov.md",
+            "Cosmology" => "cosmo.md",
+            "Neutron Stars" => "tov.md",
+            "Orbits in Kerr" => "kerr.md",
             "Wave Equation" => "wave1D.md",
             "Maxwell" => "maxwell.md",
         ]
