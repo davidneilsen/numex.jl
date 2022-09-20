@@ -28,6 +28,7 @@ makedocs(;
             "Orbits in Kerr" => "kerr.md",
             "Wave Equation" => "wave1D.md",
             "Maxwell" => "maxwell.md",
+            "Fluids" => "fluid.md",
         ]
     ],
 )
