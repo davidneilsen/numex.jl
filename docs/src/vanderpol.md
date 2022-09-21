@@ -33,5 +33,16 @@ package to solve the equations.
 
 # Explore the Limit Cycle
 
+One method for studying dynamical systems is to plot the solutions in phase space.
+A phase space plot for a simple system is made by plotting the the position and
+momentum at regular intervals on a two-dimensional plot.  For example, the phase
+space plot for a simple harmonic oscillator would simple be a closed loop.
 
-
+In some nonlinear systems, there is an attractor or a closed orbit in phase space
+towards which the system tends to evolve. If the system begins in a state away
+from the attractor, it tends to evolve towards the attracting solution.  The 
+van der Pol system has an attractor.  The example file [vanderPol.ipynb](https://github.com/davidneilsen/numex.jl/blob/main/examples/vanderPol.ipynb) solves the ODEs for 100
+different, randomly chosen sets of initial conditions and then plots the velocity
+``\dot x`` vs. the position ``x``.  We see that most of the solutions evolve to the
+attractor solution, while a few simple stop oscillating (the dots on the ``x``-axis
+with ``\dot x = 0``).
