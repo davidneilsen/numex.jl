@@ -49,7 +49,7 @@ forces.  The force on body at position ``\mathrm{r}_i`` with mass ``m_i``
 is
 ```math
 m_i \ddot \mathrm{r}_i 
-=  \sum_\limits{j=1 \\ j\neq i}^{\infty} 
+=  \sum_{\substack{j=1 \\ j\neq i}}^{\infty} 
 -{G m_i m_j}{|\mathrm{r}_i - \mathrm{r}_j|^3}(\mathrm{r}_i - \mathrm{r}_j)
 ```
 As mentioned before, Hamiltonian systems have several advantages for
@@ -77,7 +77,63 @@ we can write the equations of motion for this system as
 
 ## Numerical Solution
 
-We can solve the ODEs
+We can solve the ODEs using the solvers in the `DifferentialEquations.jl`
+package.  We could use symplectic methods that conserve the total energy
+and the angular momentum.  However, these methods require a constant time
+step. Some three-body problems have very different dynamical time
+scales at different times or for different bodies.  In this case, it may
+be more efficient to use a high-order, adaptive integrator.
 
 ## Examples
 
+
+## Extension to General Relativity
+
+The Einstein equations of general relativity are complicated, nonlinear
+partial differential equations.  However, in a weak gravitational field,
+we can use approximations to simplify the equations.  One such method
+for simplifying the equations is the __Post-Newton Method.__  
+The post-Newtonian method is useful when the gravitational potential
+is small *and* the particle speeds are also small compared to the
+speed of light
+```math
+\left| \Phi  = \frac{Gm}{rc^2} \right| \ll 1 \mbox{and} \frac{v^2}{c^2} \ll 1.
+```
+
+Before introducing the post-Newtonian equations, we first begin with 
+the Hamiltonian for Newtonian gravity.  Consider three bodies with 
+mass ``m_a``, labelled with the index ``a = 1, 2, 3``.  The Hamiltonian
+for this system is simply the total energy, expressed in terms of the 
+positions of the particles ``\mathbf{r}_a`` and their momentae ``\mathbf{p}_a``.
+We define the vector ``r_{ab} = \mathbf{r}_a - \mathbf{r}_b`` 
+with magnitude ``r_{ab} = |\mathbf{r}_a - \mathbf{r}_b|,`` and the unit
+vector ``\mathbf{n}_{ab} = \mathbf{r}_{ab}/r_{ab}``.
+The square of the momentum is ``p_a^2 = \mathbf{p}_a \cdot \mathbf{p}_a``.
+Hamilton's equations are
+```math
+\dot \mathbf{q}_a = \frac{\partial H}{\partial \mathbf{p}_a},
+\qquad
+\dot \mathbf{p}_a = -\frac{\partial H}{\partial \mathbf{q}_a}.
+```
+
+```math
+H_N = \frac{1}{2}\sum_a \frac{p_a^2}{m_a} 
+         - \frac{1}{2} \sum_{a,b\neq a} \frac{m_a m_b}{r_{ab}}
+```
+
+The post-Newtonian equations introduce corrections to the Newtonian
+equations in an expansion in powers of ``\epsilon \sim \Phi \sim v^2/c^2``
+```math
+H = H_N + H_{1PN} + H_{2PN} + \cdots
+```
+The first-order corrections for three bodies is
+```math
+H_{1PN} = -\frac{1}{8} \sum_a m_a \left(\frac{p_a^2}{m_a^2}\right)^2
+          - \frac{1}{4}\sum_{a,b\neq a} \frac{m_a m_b}{r_{ab}} 
+          \left\{ 
+             6\frac{p_a^2}{m_a^2} 
+             - 7\frac{\mathbf{p}_a\cdot \mathbf{p}_b}{m_a m_b} 
+          - \frac{(\mathbf{n}_{ab}\cdot\mathbf{p}_a)(\mathbf{n}_{ab}\cdot\mathbf{p}_b)}{m_a m_b}
+          \right\}
+         + \frac{1}{2}\sum_{a, b\neq c, c\neq a}\frac{m_a m_b m_c}{r_{ab}r_{ac}}.
+```
