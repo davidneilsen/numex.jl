@@ -61,6 +61,14 @@ Julia uses just-in-time compilation to native computer code, which makes
 its performance nearly as fast as native C code. 
 
 
+## Jupyter Notebooks
+
+[Jupyter notebooks](https://jupyter.org/) are an interactive way to run
+Julia and python code in a web browser.  This repository contains several
+Jupyter notebooks to give some simple examples of the numerical problems
+discussed here.
+
+
 ```@index
 ```
 
