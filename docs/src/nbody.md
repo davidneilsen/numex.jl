@@ -21,36 +21,35 @@ F = \frac{G m_1 m_2}{r^2},
 ```
 where ``G`` is Newton's Gravitation constant, and ``r`` is the
 distance between the two masses.  Using the position vectors for 
-the two bodies, ``\mathrm{r}_1`` and ``\mathrm{r}_2``, we can
+the two bodies, ``\mathbf{r}_1`` and ``\mathbf{r}_2``, we can
 write this in vector form as
 ```math
-\mathbf{F}_{12} =  -{G m_1 m_2}{|\mathrm{r}_1 - \mathrm{r}_2|^2} 
-\hat \mathrm{r}_{12},
+\mathbf{F}_{12} = - \frac{G m_1 m_2}{|\mathbf{r}_1 - \mathbf{r}_2|^2}\hat{\mathbf{r}}_{12},
 ```
-where ``\mathrm{F}_{12}`` is the force on body 1 due to the body 2.
-and ``\mathrm{r}_{12}`` is the unit vector from body 1 to 2
+where ``\mathbf{F}_{12}`` is the force on body 1 due to the body 2.
+and ``\hat{\mathbf{r}}_{12}`` is the unit vector from body 1 to 2
 ```math
-\mathrm{r}_{12} = \frac{\mathrm{r}_1 - \mathrm{r}_2}{|\mathrm{r}_1 - \mathrm{r}_2|}.
+\hat{\mathbf{r}}_{12} = \frac{\mathbf{r}_1 - \mathbf{r}_2}{|\mathbf{r}_1 - \mathbf{r}_2|}.
 ```
-The equations of mtion for two bodies are then
+Newton's second law gives the equations of motion for two bodies as
 ```math
 \begin{aligned}
-m_1 \ddot \mathrm{r}_1 &=  \mathrm{F}_{12} 
-= -{G m_1 m_2}{|\mathrm{r}_1 - \mathrm{r}_2|^3}(\mathrm{r}_1 - \mathrm{r}_2)\\
-m_2 \ddot \mathrm{r}_2 &=  \mathrm{F}_{21} 
-= -{G m_1 m_2}{|\mathrm{r}_2 - \mathrm{r}_1|^3}(\mathrm{r}_2 - \mathrm{r}_1)
+\mathbf{F}_{\rm net} = m_1 \ddot{\mathbf{r}}_1 &=  \mathbf{F}_{12} 
+= -\frac{G m_1 m_2}{|\mathbf{r}_1 - \mathbf{r}_2|^3}(\mathbf{r}_1 - \mathbf{r}_2)\\
+m_2 \ddot{\mathbf{r}}_2 &=  \mathbf{F}_{21} 
+= -\frac{G m_1 m_2}{|\mathbf{r}_2 - \mathbf{r}_1|^3}(\mathbf{r}_2 - \mathbf{r}_1)
 \end{aligned}
 ```
-By Newton's Third Law, ``\mathrm{F}_{21} = - \mathrm{F}_{12}``, as can be 
+By Newton's Third Law, ``\mathbf{F}_{21} = - \mathbf{F}_{12}``, as can be 
 seen.
 
 To generalize these equations for ``N`` bodies, we simply sum all of the
-forces.  The force on body at position ``\mathrm{r}_i`` with mass ``m_i``
+forces.  The force on body at position ``\mathbf{r}_a`` with mass ``m_a``
 is
 ```math
-m_i \ddot \mathrm{r}_i 
-=  \sum_{\substack{j=1 \\ j\neq i}}^{\infty} 
--{G m_i m_j}{|\mathrm{r}_i - \mathrm{r}_j|^3}(\mathrm{r}_i - \mathrm{r}_j)
+\mathrm{F}_{\rm net} = m_a \ddot{\mathbf{r}}_a 
+=  \sum_{b=1, b\neq a}^{\infty} 
+-\frac{G m_a m_b}{|\mathbf{r}_a - \mathbf{r}_b|^3}(\mathbf{r}_a - \mathbf{r}_b)
 ```
 As mentioned before, Hamiltonian systems have several advantages for
 numerical work, such as numerical methods can conserve the energy and
@@ -59,19 +58,19 @@ of Hamiltonian systems are the coordinates, usually labeled with ``q``'s
 and the canonical momentae, labeled with ``p``'s.  In Cartesian coordinates,
 the canonical momentae are
 ```math
-p_i = m_i\dot x_i.
+p_a = m_i\dot{x}_a.
 ```
 Using this definition of the canonical momentum and Newton's second law
 in the general form
 ```math
-\frac{d\mathrm{p}}{dt} = \mathrm{F}_{\rm net},
+\frac{d\mathbf{p}}{dt} = \mathbf{F}_{\rm net},
 ```
 we can write the equations of motion for this system as
 ```math
 \begin{aligned}
-\dot \mathrm{q}_i &= \frac{\mathrm{p}_i}{m_i}\\
-\dot \mathrm{p}_i &= \sum_\limits{j=1 \\ j\neq i}^{\infty} 
--{G m_i m_j}{|\mathrm{r}_i - \mathrm{r}_j|^3}(\mathrm{r}_i - \mathrm{r}_j).
+\dot{\mathbf{q}}_a &= \frac{\mathbf{p}_a}{m_a}\\
+\dot{\mathbf{p}}_a &= \sum_{b=1, b\neq a}^{\infty} 
+-\frac{G m_a m_b}{|\mathbf{r}_a - \mathbf{r}_b|^3}(\mathbf{r}_a - \mathbf{r}_b).
 \end{aligned}
 ```
 
@@ -87,6 +86,7 @@ be more efficient to use a high-order, adaptive integrator.
 ## Examples
 
 
+
 ## Extension to General Relativity
 
 The Einstein equations of general relativity are complicated, nonlinear
@@ -97,7 +97,8 @@ The post-Newtonian method is useful when the gravitational potential
 is small *and* the particle speeds are also small compared to the
 speed of light
 ```math
-\left| \Phi  = \frac{Gm}{rc^2} \right| \ll 1 \mbox{and} \frac{v^2}{c^2} \ll 1.
+\left| \Phi\right|  = \left|\frac{Gm}{rc^2} \right| \ll 1, \qquad {\rm and}
+\qquad \left(\frac{v^2}{c^2}\right) \ll 1.
 ```
 
 Before introducing the post-Newtonian equations, we first begin with 
@@ -111,9 +112,9 @@ vector ``\mathbf{n}_{ab} = \mathbf{r}_{ab}/r_{ab}``.
 The square of the momentum is ``p_a^2 = \mathbf{p}_a \cdot \mathbf{p}_a``.
 Hamilton's equations are
 ```math
-\dot \mathbf{q}_a = \frac{\partial H}{\partial \mathbf{p}_a},
+\dot{\mathbf{q}}_a = \frac{\partial H}{\partial \mathbf{p}_a},
 \qquad
-\dot \mathbf{p}_a = -\frac{\partial H}{\partial \mathbf{q}_a}.
+\dot{\mathbf{p}}_a = -\frac{\partial H}{\partial \mathbf{q}_a}.
 ```
 
 ```math
@@ -126,14 +127,16 @@ equations in an expansion in powers of ``\epsilon \sim \Phi \sim v^2/c^2``
 ```math
 H = H_N + H_{1PN} + H_{2PN} + \cdots
 ```
-The first-order corrections for three bodies is
+The first-order corrections for ``N`` bodies is
 ```math
-H_{1PN} = -\frac{1}{8} \sum_a m_a \left(\frac{p_a^2}{m_a^2}\right)^2
+\begin{aligned}
+H_{1PN} &= -\frac{1}{8} \sum_a m_a \left(\frac{p_a^2}{m_a^2}\right)^2
           - \frac{1}{4}\sum_{a,b\neq a} \frac{m_a m_b}{r_{ab}} 
           \left\{ 
              6\frac{p_a^2}{m_a^2} 
              - 7\frac{\mathbf{p}_a\cdot \mathbf{p}_b}{m_a m_b} 
           - \frac{(\mathbf{n}_{ab}\cdot\mathbf{p}_a)(\mathbf{n}_{ab}\cdot\mathbf{p}_b)}{m_a m_b}
-          \right\}
-         + \frac{1}{2}\sum_{a, b\neq c, c\neq a}\frac{m_a m_b m_c}{r_{ab}r_{ac}}.
+          \right\}\\
+       &\quad  + \frac{1}{2}\sum_{a, b\neq c, c\neq a}\frac{m_a m_b m_c}{r_{ab}r_{ac}}.
+\end{aligned}
 ```

@@ -65,7 +65,7 @@ next point ``x_{k+1}`` using this equation.
 
 ## Example
 
-The Jupyter notebook [EulerMethod.ipynb](https://) demonstrates the
+The Jupyter notebook [EulerMethod.ipynb](https://github.com/davidneilsen/numex.jl/blob/main/examples/EulerMethod.ipynb) demonstrates the
 Euler method to solve the ODE
 
 ## Going Further

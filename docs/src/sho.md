@@ -17,7 +17,7 @@ simple harmonic oscillator
 \frac{d^2 y}{dt^2} = -\omega^2 y.
 ```
 The equation is solved on a domain $0 \le t$ as an initial value problem,
-with `y(0)` and `\dot y(0)` specified at the initial time.
+with ``y(0)`` and ``\dot{y}(0)`` specified at the initial time.
 The solution of this equation can be written
 ```math
 y(t) = A \sin(\omega t) + B\cos(\omega t),
@@ -150,7 +150,7 @@ y(t) = A \cos(10 t) + B \sin(10 t) + \frac{8}{19}\cos(9 t).
 where the constants ``A`` and ``B`` are determined by initial conditions.
 
 
-The Jupyter notebook [EulerMethod.ipynb](https://) demonstrates the
+The Jupyter notebook [EulerMethod.ipynb](https://github.com/davidneilsen/numex.jl/blob/main/examples/EulerMethod.ipynb) demonstrates the
 Euler method to solve the ODE
 
 ## Going Further
