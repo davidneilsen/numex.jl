@@ -99,7 +99,7 @@ for the energy, making this now effectively a one-dimensional problem.
 To find the equations of motion, we can differentiate the energy equation
 with respect to time
 ```math
-\frac{dE}{dt} = m \dot{r} \ddot{r} + \frac{dV_{\rm eff}(r)}{r}\dot{dr} = 0.
+\frac{dE}{dt} = m \dot{r} \ddot{r} + \frac{dV_{\rm eff}(r)}{dr}\dot{r} = 0.
 ```
 In writing this equation, we have used the chain rule.  For example,
 ```math
