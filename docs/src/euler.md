@@ -70,31 +70,25 @@ Euler method to solve the ODE
 
 ## Going Further
 
-1. Try solving some different ODEs with the Euler method.
-   For example, solve
+(1) Try solving some different ODEs with the Euler method.  For example, solve
 ```math
 \frac{dy}{dx} = -x y,
 ```
-on the domain ``x\in[0,5]`` with the initial value ``y(0)=2``.  The
-exact solution has the form
+on the domain ``x\in[0,5]`` with the initial value ``y(0)=2``.  The exact solution has the form
 ```math
 y = A e^{-x^2/2}.
 ```
 
-2. Try solving a system of equations
+(2) Try solving a system of equations
 ```math
 \begin{aligned}
 \frac{du}{dx} &= 3u + 2y,\\
 \frac{dy}{dx} &= 4u + y,
 \end{aligned}
 ```
-on the domain ``0\le t\le 1`` with the initial conditions ``u(0) = 0``
-and ``y(0) = 1.``  Try different values of ``h``, such as 
-``h = 0.2, 0.1, 0.05, 0.025``.
+on the domain ``0\le t\le 1`` with the initial conditions ``u(0) = 0`` and ``y(0) = 1.``  Try different values of ``h``, such as ``h = 0.2, 0.1, 0.05, 0.025``.
 
-3. How does the error in the Euler method depend on the 
-   discrete step size ``h``?  *Hint.* Expand the function ``y(x+h)``
-   in a Taylor series about ``x``
+(3) How does the error in the Euler method depend on the discrete step size ``h``?  *Hint.* Expand the function ``y(x+h)`` in a Taylor series about ``x``
 ```math
 y(x+h) = y(x) + \frac{dy}{dx} h + \frac{d^2y}{dx^2} h^2.
 ```
