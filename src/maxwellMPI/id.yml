@@ -1,0 +1,14 @@
+grid:
+  xmin: -6.0
+  xmax:  6.0
+  ymin: -6.0
+  ymax:  6.0
+  nx: 25
+  ny: 25
+
+numerics:
+  itmax: 2
+  cfl: 0.25
+
+output:
+  vtkfreq: 1

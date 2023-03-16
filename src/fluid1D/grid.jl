@@ -1,3 +1,8 @@
+struct Pars
+
+end
+
+
 struct Grid
 
     bbox :: Vector{Float64}
@@ -49,7 +54,8 @@ struct GridFields
         u2 = Array{Vector{Float64}}(undef, neqs)
         du = Array{Vector{Float64}}(undef, neqs)
         wrk = Array{Array{Vector{Float64}},1}(undef, nstage)
-        pars = 
+        pars = Dict( "gamma" => 1.5, "idst_rhoL" => 1.0, "idst_vxL" => 0.0, "idst_PL" => 1000.0, 
+        "idst_rhoR" => 1.0, "idst_vxR" => 0.0, "idst_PR" => 0.01 )
 
         println("nx = ",nx)
         for i = 1:nstage
