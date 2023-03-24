@@ -5,6 +5,7 @@ grid:
   ymax:  6.0
   nx: 25
   ny: 25
+  ghostwidth: 2
 
 numerics:
   itmax: 2

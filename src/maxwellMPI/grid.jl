@@ -9,19 +9,30 @@ struct GH
     gibox :: Array{Int64, 3}    # global indices including ghostzones
     gcbox :: Array{Float64, 3}  # global coordinate bounds including ghostzones
 
+    comm_count :: Vector{Int64}
     comm_partner :: Array{Int64, 1}
-    length1 :: Array{Int64, 1}
-    length2 :: Array{Int64, 1} 
-    i1box :: Array{Int64, 3}
-    i2box :: Array{Int64, 3}
+    lensend :: Array{Int64, 1}
+    lenrec :: Array{Int64, 1} 
+    isendbox :: Array{Int64, 3}
+    irecbox :: Array{Int64, 3}
 
     cfl  :: Float64
     dt   :: Float64
     dx0  :: Array{Float64, 1}   # dx in each dimension
-    maxnum :: Int64             # number of mpi tasks
+    numRanks :: Int64             # number of mpi tasks
     ghostwidth :: Int64
+    rank :: Int64
+    gridID :: Int64
 
-    function GH( shp, bbox, cfl, size, dims, ghostwidth,rank)
+    lshp :: Vector{Int64}
+    loffset :: Vector{Int64}
+    lcoords :: Vector{Vector{Float64}}
+    lcbox :: Array{Float64,DIM}
+
+    function GH( shp, bbox, cfl, size, dims, ghostwidth, rank)
+
+        LTRACE = false
+
         dx0 = Array{Float64,1}(undef, DIM)
         for i = 1:DIM
             dx0[i] = (bbox[i,2] - bbox[i,1])/(shp[i]-1)
@@ -51,14 +62,14 @@ struct GH
                     boxcount += 1
     
                     ibox[boxcount,1,1] = minx + (i-1)*lengthi
-                    ibox[boxcount,1,2] = minx + (i)*lengthi
+                    ibox[boxcount,1,2] = minx + (i)*lengthi - 1
                     ibox[boxcount,2,1] = miny + (j-1)*lengthj
-                    ibox[boxcount,2,2] = miny + (j)*lengthj
+                    ibox[boxcount,2,2] = miny + (j)*lengthj - 1
     
                     gibox[boxcount,1,1] = minx + (i-1)*lengthi
-                    gibox[boxcount,1,2] = minx + (i)*lengthi
+                    gibox[boxcount,1,2] = minx + (i)*lengthi - 1
                     gibox[boxcount,2,1] = miny + (j-1)*lengthj
-                    gibox[boxcount,2,2] = miny + (j)*lengthj
+                    gibox[boxcount,2,2] = miny + (j)*lengthj - 1
     
                     if i == 1 ibox[boxcount,1,1] = minx end
                     if j == 1 ibox[boxcount,2,1] = miny end
@@ -71,12 +82,12 @@ struct GH
                     if j == numy gibox[boxcount,2,2] = maxy end
     
                     # Add ghostzones
-                    if ibox[boxcount,1,1] != minx ibox[boxcount,1,1] -= ghostwidth end
-                    if ibox[boxcount,1,2] != maxx ibox[boxcount,1,2] += ghostwidth end
-                    if ibox[boxcount,2,1] != miny ibox[boxcount,2,1] -= ghostwidth end
-                    if ibox[boxcount,2,2] != maxy ibox[boxcount,2,2] += ghostwidth end
+                    if ibox[boxcount,1,1] != minx gibox[boxcount,1,1] -= ghostwidth end
+                    if ibox[boxcount,1,2] != maxx gibox[boxcount,1,2] += ghostwidth end
+                    if ibox[boxcount,2,1] != miny gibox[boxcount,2,1] -= ghostwidth end
+                    if ibox[boxcount,2,2] != maxy gibox[boxcount,2,2] += ghostwidth end
 
-                    if rank==0
+                    if LTRACE && rank==0
                     @printf("i,j=(%d,%d), numx/y=%d,%d, size=%d\n",i,j,numx,numy,size)
                     @printf("lengthi=%d, lengthj=%d\n",lengthi,lengthj)
                     println(ibox)
@@ -100,6 +111,7 @@ struct GH
     
         cbox = zeros(Float64,boxcount,DIM,2)
         gcbox = zeros(Float64,boxcount,DIM,2)
+        comm_count = zeros(Int64,2)
         comm_partner = zeros(Int64,boxcount)
         length1 = zeros(Int64,boxcount)
         length2 = zeros(Int64,boxcount)
@@ -114,8 +126,26 @@ struct GH
                 gcbox[i,j,2] = bbox[j,1] + dx0[j]*(gibox[i,j,2]-1)
             end
         end
+
+        # gridID of the local proc
+        gridID = rank+1
          
-        new( shp, boxcount, bbox, ibox, cbox, gibox, gcbox, comm_partner, length1, length2, i1box, i2box, cfl, dt, dx0, size, ghostwidth)
+        # Set local grid size
+        lshp = zeros(Int64,DIM)
+        loffset = zeros(Int64,DIM)
+        lcoords = Vector{Vector{Float64}}(undef,DIM)
+        lcbox = zeros(Float64,DIM,2)
+
+        for k = 1:DIM
+            lshp[k] = gibox[gridID,k,2] - gibox[gridID,k,1] + 1
+            loffset[k] = gibox[gridID,k,1] - 1
+            lcbox[k,1] = gcbox[gridID,k,1]
+            lcbox[k,2] = gcbox[gridID,k,2]
+            lcoords[k] = LinRange(lcbox[k,1], lcbox[k,2], lshp[k])
+        end
+
+
+        new( shp, boxcount, bbox, ibox, cbox, gibox, gcbox, comm_count, comm_partner, length1, length2, i1box, i2box, cfl, dt, dx0, size, ghostwidth, rank, gridID, lshp, loffset, lcoords, lcbox)
     end
 end
 
@@ -159,16 +189,18 @@ end
 struct GridFields
 
     neqs :: Int64
-    grid :: Grid
+    gh :: GH
     u :: Array{Array{Float64, 2},1}
     u2 :: Array{Array{Float64, 2},1}
     dxu :: Array{Array{Float64, 2},1}
     dyu :: Array{Array{Float64, 2},1}
     wrk :: Array{Array{Float64, 2},1}
+    proc :: Array{Float64,2}
  
-    function GridFields( neqs, grid )
+    function GridFields( neqs, gh::GH)
    
-        nx, ny = grid.nx, grid.ny
+        nx = gh.lshp[1]
+        ny = gh.lshp[2]
         u = Array{Array{Float64, 2},1}(undef, neqs)
         u2 = Array{Array{Float64, 2},1}(undef, neqs)
         dxu = Array{Array{Float64, 2},1}(undef, neqs)
@@ -181,33 +213,12 @@ struct GridFields
             dyu[i] = zeros(Float64,nx,ny)
             wrk[i] = zeros(Float64,nx,ny)
         end
-        new( neqs, grid, u, u2, dxu, dyu, wrk)
+        proc = zeros(nx,ny)
+        new( neqs, gh, u, u2, dxu, dyu, wrk, proc)
 
     end
 end 
 
-function l2norm(u::Array{Float64,2})
-    s::Float64 = 0.0
-    for j in CartesianIndices(u)
-        s += u[j]*u[j]
-    end
-    nx, ny =size(u)
-    return sqrt(s/(nx*ny))
-end
 
-function l2norm_global(u::Array{Float64,2})
-    s::Float64 = 0.0
-    nx = gh.nx
-    ny = gh.ny
-    ng = gh.ghostwidth
-    hx = gh.hx
-    hy = gh.hy
 
-    for j = ng:ny-ng
-        for i = ng:nx-ng
-            s += u[j]*u[j]
-        end
-    end
-    s *= hx*hy 
 
-end

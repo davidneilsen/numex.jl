@@ -11,6 +11,7 @@ function get_params(fname)
     ymax = data[key]["xmax"]
     nx = data[key]["nx"]
     ny = data[key]["ny"]
+    ghostwidth = data[key]["ghostwidth"]
 
     key = "numerics"
     itmax = data[key]["itmax"]
@@ -19,5 +20,5 @@ function get_params(fname)
     key = "output"
     vtkfreq = data[key]["vtkfreq"]
     
-    return Int64[nx, ny, itmax, vtkfreq], Float64[xmin, xmax, ymin, ymax, cfl]
+    return Int64[nx, ny, itmax, vtkfreq, ghostwidth], Float64[xmin, xmax, ymin, ymax, cfl]
 end

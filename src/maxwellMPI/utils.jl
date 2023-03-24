@@ -1,92 +1,193 @@
+using MPI
+
 function nint(x)
     if (x >= 0.0)
+
         n = round(Int, x)
-    elseif
+    else
         n = round(Int, x)
     end
     return n
 end
 
-function cluster!(gh, dims, rboxcount)
+function set_communication(gh::GH)
 
-    boxcount = 0
-    shp0 = gh.shp0
-
-    minx = 1
-    maxx = shp0[1]
-    miny = 1
-    maxy = shp0[2]
-
-    lengthi = nint((maxx - minx)/dims[1])
-    lengthj = nint((maxy - miny)/dims[2])
-
-    numx = dims[1]
-    numy = dims[2]
-
-    if ( (numx > 1 || numy > 1) && (gh.maxnum >= (boxcount + numx*numy)) )
-        for j = 1:numy
-            for i = 1:numx
-                boxcount += 1
-
-                gh.ibox[boxcount,1,1] = minx + (i-1)*lengthi
-                gh.ibox[boxcount,1,2] = maxx + (i)*lengthi
-                gh.ibox[boxcount,2,1] = miny + (j-1)*lengthj
-                gh.ibox[boxcount,2,2] = maxy + (j)*lengthj
-
-                gh.gibox[boxcount,1,1] = minx + (i-1)*lengthi
-                gh.gibox[boxcount,1,2] = minx + (i)*lengthi
-                gh.gibox[boxcount,2,1] = miny + (i-1)*lengthi
-                gh.gibox[boxcount,2,2] = miny + (i)*lengthi
-
-                if i == 1 gh.ibox[boxcount,1,1] = minx end
-                if j == 1 gh.ibox[boxcount,2,1] = miny end
-                if i == numx gh.ibox[boxcount,1,2] = maxx end
-                if j == numy gh.ibox[boxcount,2,2] = maxy end
-
-                if i == 1 gh.gibox[boxcount,1,1] = minx end
-                if j == 1 gh.gibox[boxcount,2,1] = miny end
-                if i == numx gh.gibox[boxcount,1,2] = maxx end
-                if j == numy gh.gibox[boxcount,2,2] = maxy end
-
-                # Add ghostzones
-                if gh.ibox[boxcount,1,1] != minx gh.ibox[boxcount,1,1] -= gh.ghostwidth end
-                if gh.ibox[boxcount,1,2] != maxx gh.ibox[boxcount,1,1] += gh.ghostwidth end
-                if gh.ibox[boxcount,2,1] != miny gh.ibox[boxcount,1,1] -= gh.ghostwidth end
-                if gh.ibox[boxcount,2,2] != maxy gh.ibox[boxcount,1,1] += gh.ghostwidth end
-
+    gh.comm_count[1] = 0
+    for j = 1:gh.boxcount
+        if j != gh.gridID
+            if grid_intersect(gh.gridID,j,gh.gibox) == 1
+                gh.comm_count[1] += 1
+                gh.comm_partner[gh.comm_count[1]] = j
+                @printf("Rank %d: partner %d\n",gh.gridID,j)
             end
         end
-    else
-        boxcount += 1
-
-        gh.ibox[boxcount,1,1] = minx
-        gh.ibox[boxcount,1,2] = maxx
-        gh.ibox[boxcount,2,1] = miny
-        gh.ibox[boxcount,2,2] = maxy
-        
-        gh.gibox[boxcount,1,1] = minx
-        gh.gibox[boxcount,1,2] = maxx
-        gh.gibox[boxcount,2,1] = miny
-        gh.gibox[boxcount,2,2] = maxy
     end
 
-    rboxcount = boxcount
+    length = ones(Int64,1)
+    icombox = Array{Int64,2}(undef,2,2)
+    for i = 1:gh.comm_count[1]
+        find_intersection!(icombox, length, gh.gridID, gh.comm_partner[i], gh.ibox, gh.gibox)
+        for j = 1:2
+            for k = 1:2
+                gh.irecbox[i,j,k] = icombox[j,k]
+            end
+        end
+        gh.lenrec[i] = length[1]
+        find_intersection!(icombox, length, gh.comm_partner[i], gh.gridID, gh.ibox, gh.gibox)
+        for j = 1:2
+            for k = 1:2
+                gh.isendbox[i,j,k] = icombox[j,k]
+            end
+        end
+        gh.lensend[i] = length[1]
+    end
+
 end
 
+function grid_intersect(g1, g2, gibox)
 
+    LTRACE = false
+    LTRACE2 = false 
 
-
-function grid_sync( nfields)
-
-    return 0 if gh.numRanks == 1
-    
-    send_buffer = Array{Array{Float64,1},1}(undef, gh.comm_count)
-    recv_buffer = Array{Array{Float64,1},1}(undef, gh.comm_count)
-
-    for i = 1:gh.comm_count
-        send_buffer[i] = Array{Float64,1}(undef, numfields*gh.length1[i])
-        recv_buffer[i] = Array{Float64,1}(undef, numfields*gh.length2[i])
+    if LTRACE
+        @printf("grid_intersect: checking grids %d and %d\n",g1,g2)
     end
 
+    if LTRACE2
+        @printf("... g1=%d,k=1,gibox(g1,min/max)=%d/%d, g2=%d,k=1,gibox(g2,min/max)=%d/%d",g1,gibox[g1,1,1],gibox[g1,1,2],g2,gibox[g2,1,1],gicbox[g2,1,2])
+        @printf("... g1=%d,k=2,gibox(g1,min/max)=%d/%d, g2=%d,k=2,gibox(g2,min/max)=%d/%d",g1,gibox[g1,1,1],gibox[g1,2,2],g2,gicbox[g2,1,1],gicbox[g2,2,2])
+    end
+
+    for k = 1:DIM
+        if (gibox[g1,k,1] >= gibox[g2,k,1])
+            if (gibox[g1,k,1] > gibox[g2,k,2])
+                # no intersection
+                if LTRACE2 
+                    @printf("...grid_intersect: grids(%d, %d) no intersection 1, k=%d\n",g1,g2,k) 
+                    #@printf("......k=%d, g1 min: %d, g2 max: %d\n",k,gibox[g1,k,1],gibox[g2,k,2])
+                end
+                return 0
+            end
+        else
+            if (gibox[g1,k,2] < gibox[g2,k,1])
+                # no intersection
+                if LTRACE2
+                    @printf("...grid_intersect: grids(%d, %d) no intersection 2, k=%d\n",g1,g2,k) 
+                    #@printf("......k=%d, g1 max: %d, g2 min: %d\n",k,gibox[g1,k,2],gibox[g2,k,1])
+                end
+                return 0
+            end
+        end
+    end
+
+    if LTRACE 
+        @printf("...grid_intersect: grids(%d, %d) intersection!\n",g1,g2) 
+    end
+
+    return 1
+end
+
+function find_intersection!(icombox, length, g1, g2, ibox, gibox)
+    LTRACE = false
+    LTRACE2 = false
+
+    if LTRACE @printf("find_intersection!\n") end
+
+#    if LTRACE2
+#        @printf("g1 %d, g2 %d, rank %d, ngdminx %g, ngdmaxx %g\n",g1,g2);
+#    end
+
+    for k = 1:DIM
+        if gibox[g1,k,1] >= ibox[g2,k,1]
+            if gibox[g1,k,1] > ibox[g2,k,2] return 0 end
+            icombox[k,1] = gibox[g1,k,1]
+            icombox[k,2] = ibox[g2,k,2]
+        else
+            if gibox[g1,k,2] < ibox[g2,k,1] return 0 end
+            icombox[k,1] = ibox[g2,k,1]
+            icombox[k,2] = gibox[g1,k,2]
+        end
+    end
+
+    length[1] = (icombox[1,2] - icombox[1,1] + 1)*(icombox[2,2] - icombox[2,1] + 1)
+    if (LTRACE)
+        @printf("g1 %d, g2 %d, icombox: %d, %d, %d, %d\n",g1,g2,icombox[1,1],icombox[1,2],icombox[2,1],icombox[2,2])
+    end
+end
+
+function grid_sync!(fields, comm)
+
+    gh = fields.gh
+    if gh.numRanks == 1 return 0 end
+
+    neqs = fields.neqs
+
+    comm_count = gh.comm_count[1]
+
+    send_buffer = Array{Array{Float64,1},1}(undef, comm_count)
+    recv_buffer = Array{Array{Float64,1},1}(undef, comm_count)
+
+    for i = 1:comm_count
+        send_buffer[i] = Array{Float64,1}(undef, neqs*gh.lensend[i])
+        recv_buffer[i] = Array{Float64,1}(undef, neqs*gh.lenrec[i])
+    end
+
+    sreq = Vector{MPI.Request}(undef, comm_count)
+    rreq = Vector{MPI.Request}(undef, comm_count)
+
+    u = fields.u
+    for k = 1:comm_count
+        cpk = gh.comm_partner[k] - 1
+        rreq[k] = MPI.Irecv!(recv_buffer[k], cpk, cpk, comm)
+        for m = 1:neqs
+            n = 0
+            for j = gh.isendbox[k,2,1]:gh.isendbox[k,2,2]
+                jj = j - gh.loffset[2]
+                for i = gh.isendbox[k,1,1]:gh.isendbox[k,1,2]
+                    ii = i - gh.loffset[1]
+                    n += 1
+                    send_buffer[k][n+k*gh.lensend[k]] = u[k][ii,jj]
+                end
+            end
+        end
+        sreq[k] = MPI.Isend(send_buffer[k], cpk, gh.rank, comm)
+    end
+                    
+    MPI.Waitall(sreq)
+    MPI.Waitall(rreq)
+
     
+end
+
+function l2norm(u::Array{Float64,2})
+    s::Float64 = 0.0
+    for j in CartesianIndices(u)
+        s += u[j]*u[j]
+    end
+    nx, ny =size(u)
+    return sqrt(s/(nx*ny))
+end
+
+function l2norm_global(u::Array{Float64,2}, gh)
+
+    s::Float64 = 0.0
+    nx = gh.nx
+    ny = gh.ny
+    ng = gh.ghostwidth
+    hx = gh.hx
+    hy = gh.hy
+
+    for j = ng:ny-ng
+        for i = ng:nx-ng
+            s += u[j]*u[j]
+        end
+    end
+    s *= hx*hy 
+
+    sendb = Buffer(s)
+    sums = Gather(sendb, MPI_COMM_WORLD)
+    if gh.rank == 0
+        print("## l2norm_global: sums = ",sums)
+    end
+
 end

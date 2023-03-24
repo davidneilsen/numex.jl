@@ -1,13 +1,15 @@
 
 function init_data!(fields)
-    nx = fields.grid.nx
-    ny = fields.grid.ny
+    nx = fields.gh.lshp[1]
+    ny = fields.gh.lshp[2]
 
     Ex = fields.u[1]
     Ey = fields.u[2]
     Bz = fields.u[3]
-    x = fields.grid.x
-    y = fields.grid.y
+    x = fields.gh.lcoords[1]
+    y = fields.gh.lcoords[2]
+    proc = fields.proc
+    rank = fields.gh.rank
 
     amp1 = 1.0
     lambda1 = 1.0
@@ -15,6 +17,9 @@ function init_data!(fields)
     for j=1:ny, i=1:nx
         r = sqrt(x[i]*x[i] + y[j]*y[j])
         Bz[i,j] = - 8.0*amp1*lambda1*lambda1*exp(-lambda1*r*r)
+    end
+    for j=1:ny, i=1:nx
+        proc[i,j] = rank
     end
 
 end

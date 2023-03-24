@@ -10,6 +10,8 @@ const DIM=2
 
 include("grid.jl")
 
+include("utils.jl")
+
 include("derivs.jl")
 
 include("rk2.jl")
