@@ -138,7 +138,12 @@ function grid_sync!(fields, comm)
     u = fields.u
     for k = 1:comm_count
         cpk = gh.comm_partner[k] - 1
+
+        #@printf("rank: %d >>> send to %d. len=%d, (%d, %d) (%d, %d)\n",gh.rank,cpk,gh.lensend[k],gh.isendbox[k,1,1],gh.isendbox[k,1,2],gh.isendbox[k,2,1],gh.isendbox[k,2,2])
+
         rreq[k] = MPI.Irecv!(recv_buffer[k], cpk, cpk, comm)
+
+        ls = length(send_buffer[k])
         for m = 1:neqs
             n = 0
             for j = gh.isendbox[k,2,1]:gh.isendbox[k,2,2]
@@ -146,25 +151,55 @@ function grid_sync!(fields, comm)
                 for i = gh.isendbox[k,1,1]:gh.isendbox[k,1,2]
                     ii = i - gh.loffset[1]
                     n += 1
-                    send_buffer[k][n+k*gh.lensend[k]] = u[k][ii,jj]
+                    if (lii=n+(m-1)*gh.lensend[k])>ls
+                        @printf(">>> problem! ls=%d,lii=%d, n=%d, k=%d,m=%d,i=%d,j=%d,lsend=%d,(%d,%d),(%d,%d)\n",ls,lii,n,k,m,i,j,gh.lensend[k],gh.isendbox[k,1,1],gh.isendbox[k,1,2],gh.isendbox[k,2,1],gh.isendbox[k,2,2])
+                    end
+                    send_buffer[k][n+(m-1)*gh.lensend[k]] = u[m][ii,jj]
                 end
             end
         end
         sreq[k] = MPI.Isend(send_buffer[k], cpk, gh.rank, comm)
+        @printf("rank: %d >>> send to %d. len=%d, (%d, %d) (%d, %d), tag=%d, |u|=%g\n",gh.rank,cpk,gh.lensend[k],gh.isendbox[k,1,1],gh.isendbox[k,1,2],gh.isendbox[k,2,1],gh.isendbox[k,2,2],gh.rank,l2norm(send_buffer[k]))
     end
                     
     MPI.Waitall(sreq)
     MPI.Waitall(rreq)
 
+    for k = 1:comm_count
+        cpk = gh.comm_partner[k] - 1
+        @printf("rank: %d >>> received from %d. len=%d, (%d, %d) (%d, %d), tag=%d, |u|=%g\n",gh.rank,cpk,gh.lenrec[k],gh.irecbox[k,1,1],gh.irecbox[k,1,2],gh.irecbox[k,2,1],gh.irecbox[k,2,2],gh.rank,l2norm(recv_buffer[k]))
+        for m = 1:neqs
+            n = 0
+            for j = gh.irecbox[k,2,1]:gh.irecbox[k,2,2]
+                jj = j - gh.loffset[2]
+                for i = gh.irecbox[k,1,1]:gh.irecbox[k,1,2]
+                    ii = i - gh.loffset[1]
+                    n += 1
+                    u[m][ii,jj] = recv_buffer[k][n+(m-1)gh.lenrec[k]]
+                end
+            end
+        end
+    end
     
+end
+
+function l2norm(u::Vector{Float64})
+    s::Float64 = 0.0
+    nx = length(u)
+    for j = 1:nx
+        s += u[j]*u[j]
+    end
+    return sqrt(s/nx)
 end
 
 function l2norm(u::Array{Float64,2})
     s::Float64 = 0.0
-    for j in CartesianIndices(u)
-        s += u[j]*u[j]
+    nx, ny = size(u)
+    for j = 1:ny
+        for i = 1:nx
+            s += u[j]*u[j]
+        end
     end
-    nx, ny =size(u)
     return sqrt(s/(nx*ny))
 end
 

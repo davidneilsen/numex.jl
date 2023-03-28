@@ -62,8 +62,20 @@ function evolve!(fields, nt, vtkOutFreq)
     end
 
     for i = 1:nt
+        Maxwell2D.rk2_step_dummy!(Maxwell2D.maxwell_TE!, fields, time)
         if lrank == 0 && mod(i,screenOutFreq)==0
             @printf("Step=%d, time=%g, |Bz|=%g\n",i,time[1],l2norm(fields.u[3]))
+        end
+        if (mod(i,vtkOutFreq)==0)
+            vtkFileCount += 1
+            filename = @sprintf("maxwell_%05d",vtkFileCount)
+            pvtk_grid(filename, lx, ly; part=lrank, nparts=numRanks, extents=extent) do pvtk
+                pvtk["proc",VTKPointData()] = fields.proc
+                pvtk["Ex",VTKPointData()] = fields.u[1]
+                pvtk["Ey",VTKPointData()] = fields.u[2]
+                pvtk["Hz",VTKPointData()] = fields.u[3]
+                pvtk["time",VTKFieldData()] = time[1]
+            end
         end
     end
 
@@ -113,7 +125,7 @@ function main()
     cfl = params_double[p_cfl]
     ghostwidth = params_int[p_ghostwidth]
 
-    gh = Maxwell2D.GH(shp0, bbox0, cfl, numRanks, dims, ghostwidth, rank)
+    gh = Maxwell2D.GH(shp0, bbox0, cfl, numRanks, dims, ghostwidth, comm, rank)
 
     if numRanks > 1 
         Maxwell2D.set_communication(gh) 

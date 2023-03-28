@@ -3,12 +3,12 @@ grid:
   xmax:  6.0
   ymin: -6.0
   ymax:  6.0
-  nx: 25
-  ny: 25
+  nx: 125
+  ny: 125
   ghostwidth: 2
 
 numerics:
-  itmax: 2
+  itmax: 1
   cfl: 0.25
 
 output:

@@ -12,11 +12,11 @@ function init_data!(fields)
     rank = fields.gh.rank
 
     amp1 = 1.0
-    lambda1 = 1.0
+    lambda1 = 0.4
 
     for j=1:ny, i=1:nx
         r = sqrt(x[i]*x[i] + y[j]*y[j])
-        Bz[i,j] = - 8.0*amp1*lambda1*lambda1*exp(-lambda1*r*r)
+        Bz[i,j] = - 8.0*amp1*lambda1*lambda1*exp(-r*r*lambda1)
     end
     for j=1:ny, i=1:nx
         proc[i,j] = rank

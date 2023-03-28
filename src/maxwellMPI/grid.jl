@@ -1,3 +1,5 @@
+using MPI
+
 # The global grid
 struct GH
     shp0   :: Array{Int64,1}    # global grid size
@@ -9,6 +11,7 @@ struct GH
     gibox :: Array{Int64, 3}    # global indices including ghostzones
     gcbox :: Array{Float64, 3}  # global coordinate bounds including ghostzones
 
+    comm :: MPI.Comm
     comm_count :: Vector{Int64}
     comm_partner :: Array{Int64, 1}
     lensend :: Array{Int64, 1}
@@ -29,7 +32,7 @@ struct GH
     lcoords :: Vector{Vector{Float64}}
     lcbox :: Array{Float64,DIM}
 
-    function GH( shp, bbox, cfl, size, dims, ghostwidth, rank)
+    function GH( shp, bbox, cfl, size, dims, ghostwidth, comm, rank)
 
         LTRACE = false
 
@@ -145,7 +148,7 @@ struct GH
         end
 
 
-        new( shp, boxcount, bbox, ibox, cbox, gibox, gcbox, comm_count, comm_partner, length1, length2, i1box, i2box, cfl, dt, dx0, size, ghostwidth, rank, gridID, lshp, loffset, lcoords, lcbox)
+        new( shp, boxcount, bbox, ibox, cbox, gibox, gcbox, comm, comm_count, comm_partner, length1, length2, i1box, i2box, cfl, dt, dx0, size, ghostwidth, rank, gridID, lshp, loffset, lcoords, lcbox)
     end
 end
 
