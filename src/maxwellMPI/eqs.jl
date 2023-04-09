@@ -54,7 +54,12 @@ function Xinit_data!(fields)
     end  
 end
 
-function maxwell_TE!(dtu, u, dxu, dyu, x, y, dx, dy, time)
+function maxwell_TE!(dtu, u, dxu, dyu, xi, dxi, Dx2d, Dy2d, time, dtype)
+    x = xi[1]
+    y = xi[2]
+    dx = dxi[1]
+    dy = dxi[2]
+
     dtEx = dtu[1]
     dtEy = dtu[2]
     dtHz = dtu[3]
@@ -65,11 +70,30 @@ function maxwell_TE!(dtu, u, dxu, dyu, x, y, dx, dy, time)
     dxEy = dxu[2]
     dxHz = dxu[3]
     dyHz = dyu[3]
+    shp = size(Ex)
+    nx = shp[1]
+    ny = shp[2]
 
-    diff22_y!(dyHz, Hz, dy)
-    diff22_x!(dxHz, Hz, dx)
-    diff22_x!(dxEy, Ey, dy)
-    diff22_y!(dyEx, Ex, dx)
+    if dtype == 0
+        diff22_y!(dyHz, Hz, dy)
+        diff22_x!(dxHz, Hz, dx)
+        diff22_x!(dxEy, Ey, dy)
+        diff22_y!(dyEx, Ex, dx)
+    elseif dtype == 1
+        Hz1d = vec(Hz)
+        Ey1d = vec(Ey)
+        Ex1d = vec(Ex)
+        dxHz1d = Dx2d*Hz1d
+        dyHz1d = Dy2d*Hz1d
+        dxEy1d = Dx2d*Ey1d
+        dyEx1d = Dy2d*Ex1d
+        dxEy = reshape(dxEy1d, nx, ny)
+        dyEx = reshape(dyEx1d, nx, ny)
+        dxHz = reshape(dxHz1d, nx, ny)
+        dyHz = reshape(dyHz1d, nx, ny)
+    else
+        
+    end
 
     @. dtEx = dyHz
     @. dtEy = -dxHz

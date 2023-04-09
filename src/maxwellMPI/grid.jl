@@ -1,4 +1,5 @@
 using MPI
+using BlockBandedMatrices, BandedMatrices, ArrayLayouts, FillArrays, LazyBandedMatrices, LazyArrays
 
 # The global grid
 struct GH
@@ -32,7 +33,9 @@ struct GH
     lcoords :: Vector{Vector{Float64}}
     lcbox :: Array{Float64,DIM}
 
-    function GH( shp, bbox, cfl, size, dims, ghostwidth, comm, rank)
+    dtype :: Int64
+
+    function GH( shp, bbox, cfl, size, dims, ghostwidth, comm, rank, difftype)
 
         LTRACE = false
 
@@ -147,47 +150,12 @@ struct GH
             lcoords[k] = LinRange(lcbox[k,1], lcbox[k,2], lshp[k])
         end
 
+        dtype = difftype
 
-        new( shp, boxcount, bbox, ibox, cbox, gibox, gcbox, comm, comm_count, comm_partner, length1, length2, i1box, i2box, cfl, dt, dx0, size, ghostwidth, rank, gridID, lshp, loffset, lcoords, lcbox)
+        new( shp, boxcount, bbox, ibox, cbox, gibox, gcbox, comm, comm_count, comm_partner, length1, length2, i1box, i2box, cfl, dt, dx0, size, ghostwidth, rank, gridID, lshp, loffset, lcoords, lcbox, dtype)
     end
 end
 
-struct Grid
-
-    xmin :: Float64
-    xmax :: Float64
-    ymin :: Float64
-    ymax :: Float64
-
-    nx :: Int64
-    ny :: Int64
-
-    x :: Vector{Float64}
-    y :: Vector{Float64}
-
-    dx :: Float64
-    dy :: Float64
-    dt :: Float64
-
-    function Grid( shp, bbox, cfl)
-
-        nx = shp[1]
-        ny = shp[2]
-        xmin = bbox[1]
-        xmax = bbox[2]
-        ymin = bbox[3]
-        ymax = bbox[4]
-        dx = (xmax - xmin)/ (nx - 1)
-        dy = (ymax - ymin)/ (ny - 1)
-        c = 1.0
-        dt = cfl / sqrt(1/dx^2+1/dy^2) / c
-        x = LinRange(xmin, xmax, nx)
-        y = LinRange(ymin, ymax, ny)
-        new( xmin, xmax, ymin, ymax, nx, ny, x, y, dx, dy, dt)
-
-    end
-
-end
 
 struct GridFields
 
@@ -199,6 +167,9 @@ struct GridFields
     dyu :: Array{Array{Float64, 2},1}
     wrk :: Array{Array{Float64, 2},1}
     proc :: Array{Float64,2}
+
+    Dx2d :: BandedBlockBandedMatrix
+    Dy2d :: BandedBlockBandedMatrix
  
     function GridFields( neqs, gh::GH)
    
@@ -217,11 +188,18 @@ struct GridFields
             wrk[i] = zeros(Float64,nx,ny)
         end
         proc = zeros(nx,ny)
-        new( neqs, gh, u, u2, dxu, dyu, wrk, proc)
+
+        hx = gh.dx0[1]
+        hy = gh.dx0[2]
+
+        Px, Qx = derivKim4(nx,hx)
+        Py, Qy = derivKim4(ny,hy)
+        Dx = Px \ Qx;
+        Dy = Py \ Qy;
+        Dx2d = BandedBlockBandedMatrix(Kron(Eye(ny), Dx))
+        Dy2d = BandedBlockBandedMatrix(Kron(Dy, Eye(nx)));
+
+        new( neqs, gh, u, u2, dxu, dyu, wrk, proc, Dx2d, Dy2d)
 
     end
 end 
-
-
-
-

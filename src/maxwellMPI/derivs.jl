@@ -1,3 +1,10 @@
+####################################################################
+#
+#  Finite difference operators.
+#  Second and fourth order
+#
+####################################################################
+
 function diff21_x!(dxu, u, dx)
     nx, ny = size(u)
     idx = 1.0/dx

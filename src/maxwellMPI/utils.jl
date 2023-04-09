@@ -18,7 +18,7 @@ function set_communication(gh::GH)
             if grid_intersect(gh.gridID,j,gh.gibox) == 1
                 gh.comm_count[1] += 1
                 gh.comm_partner[gh.comm_count[1]] = j
-                @printf("Rank %d: partner %d\n",gh.gridID,j)
+                #@printf("Rank %d: partner %d\n",gh.gridID,j)
             end
         end
     end
@@ -115,12 +115,10 @@ function find_intersection!(icombox, length, g1, g2, ibox, gibox)
     end
 end
 
-function grid_sync!(fields, comm)
+function grid_sync!(u, gh, comm)
 
-    gh = fields.gh
+    neqs = length(u)
     if gh.numRanks == 1 return 0 end
-
-    neqs = fields.neqs
 
     comm_count = gh.comm_count[1]
 
@@ -135,7 +133,6 @@ function grid_sync!(fields, comm)
     sreq = Vector{MPI.Request}(undef, comm_count)
     rreq = Vector{MPI.Request}(undef, comm_count)
 
-    u = fields.u
     for k = 1:comm_count
         cpk = gh.comm_partner[k] - 1
 
@@ -159,7 +156,7 @@ function grid_sync!(fields, comm)
             end
         end
         sreq[k] = MPI.Isend(send_buffer[k], cpk, gh.rank, comm)
-        @printf("rank: %d >>> send to %d. len=%d, (%d, %d) (%d, %d), tag=%d, |u|=%g\n",gh.rank,cpk,gh.lensend[k],gh.isendbox[k,1,1],gh.isendbox[k,1,2],gh.isendbox[k,2,1],gh.isendbox[k,2,2],gh.rank,l2norm(send_buffer[k]))
+        #@printf("rank: %d >>> send to %d. len=%d, (%d, %d) (%d, %d), tag=%d, |u|=%g\n",gh.rank,cpk,gh.lensend[k],gh.isendbox[k,1,1],gh.isendbox[k,1,2],gh.isendbox[k,2,1],gh.isendbox[k,2,2],gh.rank,l2norm(send_buffer[k]))
     end
                     
     MPI.Waitall(sreq)
@@ -167,7 +164,7 @@ function grid_sync!(fields, comm)
 
     for k = 1:comm_count
         cpk = gh.comm_partner[k] - 1
-        @printf("rank: %d >>> received from %d. len=%d, (%d, %d) (%d, %d), tag=%d, |u|=%g\n",gh.rank,cpk,gh.lenrec[k],gh.irecbox[k,1,1],gh.irecbox[k,1,2],gh.irecbox[k,2,1],gh.irecbox[k,2,2],gh.rank,l2norm(recv_buffer[k]))
+        #@printf("rank: %d >>> received from %d. len=%d, (%d, %d) (%d, %d), tag=%d, |u|=%g\n",gh.rank,cpk,gh.lenrec[k],gh.irecbox[k,1,1],gh.irecbox[k,1,2],gh.irecbox[k,2,1],gh.irecbox[k,2,2],gh.rank,l2norm(recv_buffer[k]))
         for m = 1:neqs
             n = 0
             for j = gh.irecbox[k,2,1]:gh.irecbox[k,2,2]

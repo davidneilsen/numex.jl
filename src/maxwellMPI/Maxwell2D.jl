@@ -14,6 +14,8 @@ include("utils.jl")
 
 include("derivs.jl")
 
+include("compactfd.jl")
+
 include("rk2.jl")
 
 include("eqs.jl")

@@ -10,38 +10,51 @@ function rk2_step!(func::Function, fields, t)
     neqs = length(fields.u)
     tx = t[1]
 
-    dx = fields.grid.dx
-    dy = fields.grid.dy
-    dt = fields.grid.dt
-    x  = fields.grid.x
-    y  = fields.grid.y
-    yn = fields.u
-    ynp1 = fields.u2
+    gh = fields.gh
+    dx = gh.dx0[1]
+    dy = gh.dx0[2]
+    dt = gh.dt
+    x  = gh.lcoords[1]
+    y  = gh.lcoords[2]
+    un = fields.u
+    unp1 = fields.u2
     f = fields.wrk
-    dxy = fields.dxu
-    dyy = fields.dyu
-    
-    func(f, yn, dxy, dyy, x, y, dx, dy, tx)
-    @. kodiss!(f, yn, dx, dy)
+    dxu = fields.dxu
+    dyu = fields.dyu
+    comm = gh.comm
+
+    xi = Vector{Vector{Float64}}(undef,2) 
+    xi[1] = gh.lcoords[1]
+    xi[2] = gh.lcoords[2]
+    dxi = Vector{Float64}(undef,2)
+    dxi[1] = gh.dx0[1]
+    dxi[2] = gh.dx0[2]
+    Dx2d = fields.Dx2d
+    Dy2d = fields.Dy2d
+    dtype = gh.dtype
+
+    func(f, un, dxu, dyu, xi, dxi, Dx2d, Dy2d, tx, dtype)
+    @. kodiss!(f, un, dx, dy)
     #@printf("h. f1=%g, f2=%g\n",l2norm(f1[1]),l2norm(f1[2]))
-    @. rk2_helper1(ynp1, yn, f, dt)
-    Maxwell2D.grid_sync!(fields, comm)
+    @. rk2_helper1(unp1, un, f, dt)
+    Maxwell2D.grid_sync!(unp1, gh, comm)
     
     thalf = tx + 0.5*dt
     t[1] += dt
-    func(f, ynp1, dxy, dyy, x, y, dx, dy, thalf)
-    @. kodiss!(f, yn, dx, dy)
-    @. rk2_helper2(yn, f, dt)
-    Maxwell2D.grid_sync!(fields, comm)
+    func(f, unp1, dxu, dyu, xi, dxi, Dx2d, Dy2d, thalf, dtype)
+    @. kodiss!(f, un, dx, dy)
+    @. rk2_helper2(un, f, dt)
+    Maxwell2D.grid_sync!(un, gh, comm)
 end
 
 function rk2_step_dummy!(func::Function, fields, t)
-    dt = fields.gh.dt
-    dx = fields.gh.dx0[1]
-    dy = fields.gh.dx0[2]
+    gh = fields.gh
+    dt = gh.dt
+    dx = gh.dx0[1]
+    dy = gh.dx0[2]
     un = fields.u
     f = fields.wrk
-    comm = fields.gh.comm
+    comm = gh.comm
 
     t[1] += dt
     dxu = fields.dxu
@@ -60,7 +73,7 @@ function rk2_step_dummy!(func::Function, fields, t)
         @printf("rk2_step_dumm! Pre-sync >>> i=%d, |un[i]|=%g\n",i,l2norm(un[i]))
     end
     
-    Maxwell2D.grid_sync!(fields, comm)
+    Maxwell2D.grid_sync!(un, gh, comm)
 
     for i = 1:3
         @printf("rk2_step_dumm! Post-sync >>> i=%d, |un[i]|=%g\n",i,l2norm(un[i]))
