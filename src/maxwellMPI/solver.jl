@@ -50,8 +50,9 @@ function evolve!(fields, nt, vtkOutFreq)
     end
     #print("extents is ", extent)
 
+    gnrm = Maxwell2D.l2norm_global(fields.u[1],gh)
     if lrank == 1
-        @printf("Step=%d, time=%g, |Bz|=%g\n",0,time[1],l2norm(fields.u[3]))
+        @printf("Step=%d, time=%g, |Ex|=%g\n",0, time[1], gnrm)
     end
     filename = @sprintf("maxwell_%05d",vtkFileCount)
     pvtk_grid(filename, lx, ly; part=lrank, nparts=numRanks, extents=extent) do pvtk
@@ -65,8 +66,9 @@ function evolve!(fields, nt, vtkOutFreq)
     for i = 1:nt
         #@printf("@@@ Step=%d, time=%g, |Bz|=%g\n",i,time[1],l2norm(fields.u[3]))
         Maxwell2D.rk2_step!(Maxwell2D.maxwell_TE!, fields, time)
+        gnrm = Maxwell2D.l2norm_global(fields.u[1],gh)
         if lrank == 1 && mod(i,screenOutFreq)==0
-            @printf("Step=%d, time=%g, |Bz|=%g\n",i,time[1],l2norm(fields.u[3]))
+            @printf("Step=%d, time=%g, |Ex|=%g\n",i,time[1],gnrm)
         end
         if (mod(i,vtkOutFreq)==0)
             vtkFileCount += 1
@@ -159,7 +161,7 @@ function main()
 
 
     fields = Maxwell2D.GridFields(3, gh)
-    Maxwell2D.init_data!(fields)
+    Maxwell2D.waveguide_init_data!(fields)
     Maxwell2D.grid_sync!(fields.u, gh, comm)
     
     evolve!(fields, nt, VTKOutFreq)

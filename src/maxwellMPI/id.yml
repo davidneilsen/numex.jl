@@ -1,15 +1,16 @@
 grid:
-  xmin: -6.0
-  xmax:  6.0
-  ymin: -6.0
-  ymax:  6.0
-  nx: 125
-  ny: 125
+  xmin: 0.0
+  xmax: 1.0
+  ymin: 0.0
+  ymax: 1.0
+  nx: 51
+  ny: 51
   ghostwidth: 2
 
 numerics:
-  itmax: 1
+  itmax: 20
   cfl: 0.25
+  dtype: 1
 
 output:
   vtkfreq: 1

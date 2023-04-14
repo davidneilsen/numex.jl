@@ -1,2 +1,2 @@
 clean:
-	/bin/rm -rf maxwell_000*
+	/bin/rm -rf maxwell_*

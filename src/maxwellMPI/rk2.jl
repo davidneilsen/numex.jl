@@ -37,6 +37,7 @@ function rk2_step!(func::Function, fields, t)
     @. kodiss!(f, un, dx, dy)
     #@printf("h. f1=%g, f2=%g\n",l2norm(f1[1]),l2norm(f1[2]))
     @. rk2_helper1(unp1, un, f, dt)
+    waveguide_bcs(unp1)
     Maxwell2D.grid_sync!(unp1, gh, comm)
     
     thalf = tx + 0.5*dt
@@ -44,6 +45,7 @@ function rk2_step!(func::Function, fields, t)
     func(f, unp1, dxu, dyu, xi, dxi, Dx2d, Dy2d, thalf, dtype)
     @. kodiss!(f, un, dx, dy)
     @. rk2_helper2(un, f, dt)
+    waveguide_bcs(un)
     Maxwell2D.grid_sync!(un, gh, comm)
 end
 

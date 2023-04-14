@@ -202,24 +202,35 @@ end
 
 function l2norm_global(u::Array{Float64,2}, gh)
 
+    LTRACE = false
     s::Float64 = 0.0
-    nx = gh.nx
-    ny = gh.ny
-    ng = gh.ghostwidth
-    hx = gh.hx
-    hy = gh.hy
 
-    for j = ng:ny-ng
-        for i = ng:nx-ng
-            s += u[j]*u[j]
+    gridID = gh.gridID
+    jb = gh.ibox[gridID,2,1] - gh.loffset[2]
+    je = gh.ibox[gridID,2,2] - gh.loffset[2]
+    ib = gh.ibox[gridID,1,1] - gh.loffset[1]
+    ie = gh.ibox[gridID,1,2] - gh.loffset[1]
+
+    hx = gh.dx0[1]
+    hy = gh.dx0[2]
+
+    if LTRACE
+        @printf("proc=%d, irange=(%d, %d), jrange=(%d, %d), ibox=(%d,%d),(%d,%d), gibox=(%d,%d),(%d,%d)\n",gh.rank,ib,ie,jb,je,gh.ibox[gridID,1,1],gh.ibox[gridID,1,2],gh.ibox[gridID,2,1],gh.ibox[gridID,2,2],gh.gibox[gridID,1,1],gh.gibox[gridID,1,2],gh.gibox[gridID,2,1],gh.gibox[gridID,2,2])
+    end
+ 
+    for j = jb:je
+        for i = ib:ie
+            s += u[i,j]*u[i,j]
         end
     end
     s *= hx*hy 
 
-    sendb = Buffer(s)
-    sums = Gather(sendb, MPI_COMM_WORLD)
+    gs = MPI.Reduce(s, MPI.SUM, gh.comm; root=0)
+
     if gh.rank == 0
-        print("## l2norm_global: sums = ",sums)
+        return sqrt(gs)
+    else
+        return -1.0
     end
 
 end

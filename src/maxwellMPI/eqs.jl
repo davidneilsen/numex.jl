@@ -1,5 +1,26 @@
 
-function init_data!(fields)
+function waveguide_init_data!(fields)
+
+    Ex = fields.u[1]
+    Ey = fields.u[2]
+    Bz = fields.u[3]
+    x = fields.gh.lcoords[1]
+    y = fields.gh.lcoords[2]
+    shp = size(Ex)
+    time = 0.0
+
+    for j=1:shp[2], i=1:shp[1]
+        Ex[i,j] = -cos(sqrt(2.0)*pi*time)*cos(pi*x[i])*sin(pi*y[j])
+        Ey[i,j] =  cos(sqrt(2.0)*pi*time)*sin(pi*x[i])*cos(pi*y[j])
+        Bz[i,j] =  -sqrt(2.0)*sin(sqrt(2.0)*pi*time)*cos(pi*x[i])*cos(pi*y[j])
+    end
+
+    proc = fields.proc
+    rank = fields.gh.rank
+    @. proc = rank
+end
+
+function gauss_init_data!(fields)
     nx = fields.gh.lshp[1]
     ny = fields.gh.lshp[2]
 
@@ -80,6 +101,11 @@ function maxwell_TE!(dtu, u, dxu, dyu, xi, dxi, Dx2d, Dy2d, time, dtype)
         diff22_x!(dxEy, Ey, dy)
         diff22_y!(dyEx, Ex, dx)
     elseif dtype == 1
+        diff42_y!(dyHz, Hz, dy)
+        diff42_x!(dxHz, Hz, dx)
+        diff42_x!(dxEy, Ey, dy)
+        diff42_y!(dyEx, Ex, dx)
+    elseif dtype == 2
         Hz1d = vec(Hz)
         Ey1d = vec(Ey)
         Ex1d = vec(Ex)
@@ -91,6 +117,8 @@ function maxwell_TE!(dtu, u, dxu, dyu, xi, dxi, Dx2d, Dy2d, time, dtype)
         dyEx = reshape(dyEx1d, nx, ny)
         dxHz = reshape(dxHz1d, nx, ny)
         dyHz = reshape(dyHz1d, nx, ny)
+    elseif dtype == 3
+
     else
         
     end
@@ -100,9 +128,10 @@ function maxwell_TE!(dtu, u, dxu, dyu, xi, dxi, Dx2d, Dy2d, time, dtype)
     @. dtHz = dyEx - dxEy
 
 #
-    sommerfeld_bcs(dtu[1], u[1], x, y)
-    sommerfeld_bcs(dtu[2], u[2], x, y)
-    sommerfeld_bcs(dtu[3], u[3], x, y)
+    # last using these
+    #sommerfeld_bcs(dtu[1], u[1], x, y)
+    #sommerfeld_bcs(dtu[2], u[2], x, y)
+    #sommerfeld_bcs(dtu[3], u[3], x, y)
 #=
     sommerfeld_bcs_deriv(dtu[1], u[1], dxu[1], dyu[1], x, y)
     sommerfeld_bcs_deriv(dtu[2], u[2], dxu[2], dyu[2], x, y)
@@ -310,4 +339,34 @@ function sommerfeld_bcs(dtu, u, x, y)
     dyu = ( 3.0*u[i,ny] - 4.0*u[i,ny-1] + u[i,ny-2]) * idy2
     dtu[i,j] = - inv_r*(x[i]*dxu + y[j]*dyu + u_falloff*(u[i,j] - u0))
 
+end
+
+# 
+function waveguide_bcs(u)
+    Ex = u[1]
+    Ey = u[2]
+    Bz = u[3]
+    shp = size(Ex)
+    nx = shp[1]
+    ny = shp[2]
+
+    j = 1
+    for i = 1:nx
+        Ex[i,j] = 0.0
+    end
+ 
+    j = ny
+    for i = 1:nx
+        Ex[i,j] = 0.0
+    end
+
+    i = 1
+    for j = 1:ny
+        Ey[i,j] = 0.0
+    end
+
+    i = nx
+    for j = 1:ny
+        Ey[i,j] = 0.0
+    end
 end
