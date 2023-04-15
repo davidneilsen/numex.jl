@@ -1,5 +1,47 @@
+function init_data!(fields, t, pars)
 
-function waveguide_init_data!(fields)
+    idtype = pars["idtype"]
+    if idtype == 0
+        gauss_init_data!(fields)
+    elseif idtype == 1
+        a = fields.gh.cbox0[1,2]
+        b = fields.gh.cbox0[2,2]
+        x = fields.gh.lcoords[1]
+        y = fields.gh.lcoords[2]
+        waveguide_init_data!(fields.u, x, y, t, a, b, pars)
+
+        proc = fields.proc
+        rank = fields.gh.rank
+        @. proc = rank
+    else
+        Maxwell2D.oops("unknown idtype")
+    end
+
+end
+
+function cal_error!(fields, t, pars)
+    idtype = pars["idtype"]
+
+    if idtype == 0
+        for i = 1:m
+            @. fields.u2[m] = 0.0;
+        end
+    elseif idtype == 1
+        a = fields.gh.cbox0[1,2]
+        b = fields.gh.cbox0[2,2]
+        x = fields.gh.lcoords[1]
+        y = fields.gh.lcoords[2]
+        waveguide_init_data!(fields.dxu, x, y, t, a, b, pars)
+        for m = 1:3
+            @. fields.u2[m] = fields.u[m] - fields.dxu[m]
+        end
+    else
+        Maxwell2D.oops("unknown idtype")
+    end
+
+end
+
+function Xwaveguide_init_data!(fields)
 
     Ex = fields.u[1]
     Ey = fields.u[2]
@@ -19,6 +61,28 @@ function waveguide_init_data!(fields)
     rank = fields.gh.rank
     @. proc = rank
 end
+
+function waveguide_init_data!(u, x, y, t, a, b, pars)
+
+    Ex = u[1]
+    Ey = u[2]
+    Bz = u[3]
+    shp = size(Ex)
+
+    B0 = pars["idwg_bzamp"]
+    omega = pars["idwg_omega"]
+    m = pars["idwg_m_mode"]
+    n = pars["idwg_n_mode"]
+
+    omn = pi*sqrt((m/a)^2 + (n/b)^2)
+
+    for j=1:shp[2], i=1:shp[1]
+        Ex[i,j] = -B0*n*pi*cos((m*pi*x[i])/a)*sin(omn*t)*sin((n*pi*y[j])/b)/(b*omn)
+        Ey[i,j] =  B0*m*pi*cos((n*pi*y[j])/b)*sin(omn*t)*sin((m*pi*x[i])/a)/(a*omn)
+        Bz[i,j] =  B0*cos((m*pi*x[i])/a)*cos((n*pi*y[j])/b)*cos(omn*t)
+    end
+end
+
 
 function gauss_init_data!(fields)
     nx = fields.gh.lshp[1]
@@ -75,7 +139,7 @@ function Xinit_data!(fields)
     end  
 end
 
-function maxwell_TE!(dtu, u, dxu, dyu, xi, dxi, Dx2d, Dy2d, time, dtype)
+function maxwell_TE!(dtu, u, dxu, dyu, xi, dxi, dvars, time)
     x = xi[1]
     y = xi[2]
     dx = dxi[1]
@@ -95,16 +159,26 @@ function maxwell_TE!(dtu, u, dxu, dyu, xi, dxi, Dx2d, Dy2d, time, dtype)
     nx = shp[1]
     ny = shp[2]
 
+    dtype = dvars.dtype
+    Dx1d = dvars.Dx1d
+    Dy1d = dvars.Dy1d
+    Dx2d = dvars.Dx2d
+    Dy2d = dvars.Dy2d
+    u1x = dvars.u1x
+    u1y = dvars.u1y
+    du1x = dvars.du1x
+    du1y = dvars.du1y
+
     if dtype == 0
-        diff22_y!(dyHz, Hz, dy)
         diff22_x!(dxHz, Hz, dx)
-        diff22_x!(dxEy, Ey, dy)
-        diff22_y!(dyEx, Ex, dx)
+        diff22_y!(dyHz, Hz, dy)
+        diff22_x!(dxEy, Ey, dx)
+        diff22_y!(dyEx, Ex, dy)
     elseif dtype == 1
-        diff42_y!(dyHz, Hz, dy)
         diff42_x!(dxHz, Hz, dx)
-        diff42_x!(dxEy, Ey, dy)
-        diff42_y!(dyEx, Ex, dx)
+        diff42_y!(dyHz, Hz, dy)
+        diff42_x!(dxEy, Ey, dx)
+        diff42_y!(dyEx, Ex, dy)
     elseif dtype == 2
         Hz1d = vec(Hz)
         Ey1d = vec(Ey)
@@ -118,7 +192,14 @@ function maxwell_TE!(dtu, u, dxu, dyu, xi, dxi, Dx2d, Dy2d, time, dtype)
         dxHz = reshape(dxHz1d, nx, ny)
         dyHz = reshape(dyHz1d, nx, ny)
     elseif dtype == 3
-
+        u1x = zeros(nx)
+        du1x = zeros(nx)
+        u1y = zeros(ny)
+        du1y = zeros(ny)
+        cdiff_x!(dxEy, Ey, Dx1d, u1x, du1x)
+        cdiff_y!(dyEx, Ex, Dy1d, u1y, du1y)
+        cdiff_x!(dxHz, Hz, Dx1d, u1x, du1x)
+        cdiff_y!(dyHz, Hz, Dy1d, u1y, du1y)
     else
         
     end

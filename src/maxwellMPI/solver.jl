@@ -8,32 +8,10 @@ include("pars.jl")
 include("Maxwell2D.jl")
 using .Maxwell2D
 
-function parse_commandline()
-    s = ArgParseSettings()
+function evolve!(fields, pars)
+    nt = pars["itmax"]
+    vtkOutFreq = pars["vtkfreq"]
 
-    @add_arg_table s begin
-        "--nx", "-n"
-            help = "number of points in each direction"
-            arg_type = Int
-            default = 201
-       "--vtkfreq", "-f"
-            help = "Frequency of VTK output"
-            arg_type = Int
-            default = 5
-         "--cfl", "-c"
-            help = "Courant number"
-            arg_type = Float64
-            default = 0.1
-        "nsteps"
-            help = "Number of steps"
-            arg_type = Int
-            required = true
- 
-    end
-    return parse_args(s)
-end
-
-function evolve!(fields, nt, vtkOutFreq)
     time = zeros(Float64,1)
     vtkFileCount::Int64 = 0
     screenOutFreq = vtkOutFreq
@@ -54,23 +32,28 @@ function evolve!(fields, nt, vtkOutFreq)
     if lrank == 1
         @printf("Step=%d, time=%g, |Ex|=%g\n",0, time[1], gnrm)
     end
+    Maxwell2D.cal_error!(fields, time[1], pars)
     filename = @sprintf("maxwell_%05d",vtkFileCount)
     pvtk_grid(filename, lx, ly; part=lrank, nparts=numRanks, extents=extent) do pvtk
         pvtk["proc",VTKPointData()] = fields.proc
         pvtk["Ex",VTKPointData()] = fields.u[1]
         pvtk["Ey",VTKPointData()] = fields.u[2]
         pvtk["Hz",VTKPointData()] = fields.u[3]
+        pvtk["eEx",VTKPointData()] = fields.u2[1]
+        pvtk["eEy",VTKPointData()] = fields.u2[2]
+        pvtk["eHz",VTKPointData()] = fields.u2[3]
         pvtk["time",VTKFieldData()] = time[1]
     end
 
     for i = 1:nt
         #@printf("@@@ Step=%d, time=%g, |Bz|=%g\n",i,time[1],l2norm(fields.u[3]))
-        Maxwell2D.rk2_step!(Maxwell2D.maxwell_TE!, fields, time)
+        Maxwell2D.rk4_step!(Maxwell2D.maxwell_TE!, fields, time)
         gnrm = Maxwell2D.l2norm_global(fields.u[1],gh)
         if lrank == 1 && mod(i,screenOutFreq)==0
             @printf("Step=%d, time=%g, |Ex|=%g\n",i,time[1],gnrm)
         end
         if (mod(i,vtkOutFreq)==0)
+            Maxwell2D.cal_error!(fields, time[1], pars)
             vtkFileCount += 1
             filename = @sprintf("maxwell_%05d",vtkFileCount)
             pvtk_grid(filename, lx, ly; part=lrank, nparts=numRanks, extents=extent) do pvtk
@@ -78,6 +61,9 @@ function evolve!(fields, nt, vtkOutFreq)
                 pvtk["Ex",VTKPointData()] = fields.u[1]
                 pvtk["Ey",VTKPointData()] = fields.u[2]
                 pvtk["Hz",VTKPointData()] = fields.u[3]
+                pvtk["eEx",VTKPointData()] = fields.u2[1]
+                pvtk["eEy",VTKPointData()] = fields.u2[2]
+                pvtk["eHz",VTKPointData()] = fields.u2[3]
                 pvtk["time",VTKFieldData()] = time[1]
             end
         end
@@ -97,8 +83,6 @@ function main()
 
     # print("@@ I am rank $(rank)) of $(numRanks))\n")
 
-    n_params_int = 6
-    n_params_double = 5
     params_int = Array{Int64}(undef, n_params_int)
     params_double = Array{Float64}(undef, n_params_double)
 
@@ -112,6 +96,8 @@ function main()
     MPI.Barrier(comm)
     MPI.Bcast!(params_int, n_params_int, 0, comm)
     MPI.Bcast!(params_double, n_params_double, 0, comm)
+
+    pars = Maxwell2D.buildpars(params_int, params_double)
 
     dims = MPI.Dims_create(numRanks, [0, 0])
     if (ltrace && rank == root)
@@ -161,10 +147,11 @@ function main()
 
 
     fields = Maxwell2D.GridFields(3, gh)
-    Maxwell2D.waveguide_init_data!(fields)
+    time0 = 0.0
+    Maxwell2D.init_data!(fields, time0, pars)
     Maxwell2D.grid_sync!(fields.u, gh, comm)
     
-    evolve!(fields, nt, VTKOutFreq)
+    evolve!(fields, pars)
     MPI.Finalize()
 end
 

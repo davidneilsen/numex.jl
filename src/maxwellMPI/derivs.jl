@@ -149,4 +149,29 @@ function kodiss_y!(f, u, dy)
  
 end
 
+function cdiff_x!(dxu, u, Dx, u1d, dxu1d)
+    nx, ny = size(u)
+    for j = 1:ny
+        for i = 1:nx
+            u1d[i] = u[i,j]
+        end
+        dxu1d = Dx*u1d
+        for i = 1:nx
+            dxu[i,j] = dxu1d[i]
+        end
+    end
+end
+
+function cdiff_y!(dyu, u, Dy, u1d, dyu1d)
+    nx, ny = size(u)
+    for i = 1:nx
+        for j = 1:ny
+            u1d[j] = u[i,j]
+        end
+        dyu1d = Dy*u1d
+        for j = 1:ny
+            dyu[i,j] = dyu1d[j]
+        end
+    end
+end
 

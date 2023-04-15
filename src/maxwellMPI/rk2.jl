@@ -18,10 +18,11 @@ function rk2_step!(func::Function, fields, t)
     y  = gh.lcoords[2]
     un = fields.u
     unp1 = fields.u2
-    f = fields.wrk
+    f = fields.wrk[1]
     dxu = fields.dxu
     dyu = fields.dyu
     comm = gh.comm
+    dvars = fields.dvars
 
     xi = Vector{Vector{Float64}}(undef,2) 
     xi[1] = gh.lcoords[1]
@@ -29,11 +30,8 @@ function rk2_step!(func::Function, fields, t)
     dxi = Vector{Float64}(undef,2)
     dxi[1] = gh.dx0[1]
     dxi[2] = gh.dx0[2]
-    Dx2d = fields.Dx2d
-    Dy2d = fields.Dy2d
-    dtype = gh.dtype
 
-    func(f, un, dxu, dyu, xi, dxi, Dx2d, Dy2d, tx, dtype)
+    func(f, un, dxu, dyu, xi, dxi, dvars, tx)
     @. kodiss!(f, un, dx, dy)
     #@printf("h. f1=%g, f2=%g\n",l2norm(f1[1]),l2norm(f1[2]))
     @. rk2_helper1(unp1, un, f, dt)
@@ -42,7 +40,7 @@ function rk2_step!(func::Function, fields, t)
     
     thalf = tx + 0.5*dt
     t[1] += dt
-    func(f, unp1, dxu, dyu, xi, dxi, Dx2d, Dy2d, thalf, dtype)
+    func(f, unp1, dxu, dyu, xi, dxi, dvars, thalf)
     @. kodiss!(f, un, dx, dy)
     @. rk2_helper2(un, f, dt)
     waveguide_bcs(un)

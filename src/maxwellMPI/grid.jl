@@ -156,6 +156,39 @@ struct GH
     end
 end
 
+struct DerivVars
+
+    dtype :: Int
+    Dx1d :: BandedMatrix
+    Dy1d :: BandedMatrix
+    Dx2d :: BandedBlockBandedMatrix
+    Dy2d :: BandedBlockBandedMatrix
+    u1x :: Vector{Float64}
+    u1y :: Vector{Float64}
+    du1x :: Vector{Float64}
+    du1y :: Vector{Float64}
+
+    function DerivVars(shp, dx0, dtype)
+        nx = shp[1]
+        ny = shp[2]
+        hx = dx0[1]
+        hy = dx0[2]
+
+        Px, Qx = derivKim4(nx,hx)
+        Py, Qy = derivKim4(ny,hy)
+        Dx = Px \ Qx
+        Dy = Py \ Qy
+        Dx2d = BandedBlockBandedMatrix(Kron(Eye(ny), Dx))
+        Dy2d = BandedBlockBandedMatrix(Kron(Dy, Eye(nx)))
+
+        u1x = Vector{Float64}(undef, nx)
+        u1y = Vector{Float64}(undef, ny)
+        du1x = Vector{Float64}(undef, nx)
+        du1y = Vector{Float64}(undef, ny)
+
+        new(dtype, Dx, Dy, Dx2d, Dy2d, u1x, u1y, du1x, du1y)
+    end 
+end
 
 struct GridFields
 
@@ -165,11 +198,9 @@ struct GridFields
     u2 :: Array{Array{Float64, 2},1}
     dxu :: Array{Array{Float64, 2},1}
     dyu :: Array{Array{Float64, 2},1}
-    wrk :: Array{Array{Float64, 2},1}
+    wrk :: Array{Array{Array{Float64, 2},1},1}
     proc :: Array{Float64,2}
-
-    Dx2d :: BandedBlockBandedMatrix
-    Dy2d :: BandedBlockBandedMatrix
+    dvars :: DerivVars
  
     function GridFields( neqs, gh::GH)
    
@@ -179,27 +210,27 @@ struct GridFields
         u2 = Array{Array{Float64, 2},1}(undef, neqs)
         dxu = Array{Array{Float64, 2},1}(undef, neqs)
         dyu = Array{Array{Float64, 2},1}(undef, neqs)
-        wrk = Array{Array{Float64, 2},1}(undef, neqs)
+
         for i = 1:neqs
             u[i] = zeros(Float64,nx,ny)
             u2[i] = zeros(Float64,nx,ny)
             dxu[i] = zeros(Float64,nx,ny)
             dyu[i] = zeros(Float64,nx,ny)
-            wrk[i] = zeros(Float64,nx,ny)
         end
+
+        nrk = 4
+        wrk = Array{Array{Array{Float64, 2},1},1}(undef,nrk)
+        for m = 1:nrk
+            wrk[m] = Array{Array{Float64, 2},1}(undef, neqs)
+        end
+        for m = 1:nrk, i = 1:neqs
+            wrk[m][i] = zeros(Float64,nx,ny)
+        end
+
         proc = zeros(nx,ny)
+        dvars = DerivVars(gh.lshp, gh.dx0, gh.dtype)
 
-        hx = gh.dx0[1]
-        hy = gh.dx0[2]
-
-        Px, Qx = derivKim4(nx,hx)
-        Py, Qy = derivKim4(ny,hy)
-        Dx = Px \ Qx;
-        Dy = Py \ Qy;
-        Dx2d = BandedBlockBandedMatrix(Kron(Eye(ny), Dx))
-        Dy2d = BandedBlockBandedMatrix(Kron(Dy, Eye(nx)));
-
-        new( neqs, gh, u, u2, dxu, dyu, wrk, proc, Dx2d, Dy2d)
+        new( neqs, gh, u, u2, dxu, dyu, wrk, proc, dvars)
 
     end
 end 
