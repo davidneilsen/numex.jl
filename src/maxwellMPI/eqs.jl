@@ -1,3 +1,5 @@
+using LinearAlgebra
+
 function init_data!(fields, t, pars)
 
     idtype = pars["idtype"]
@@ -70,10 +72,8 @@ function waveguide_init_data!(u, x, y, t, a, b, pars)
     shp = size(Ex)
 
     B0 = pars["idwg_bzamp"]
-    omega = pars["idwg_omega"]
     m = pars["idwg_m_mode"]
     n = pars["idwg_n_mode"]
-
     omn = pi*sqrt((m/a)^2 + (n/b)^2)
 
     for j=1:shp[2], i=1:shp[1]
@@ -192,10 +192,6 @@ function maxwell_TE!(dtu, u, dxu, dyu, xi, dxi, dvars, time)
         dxHz = reshape(dxHz1d, nx, ny)
         dyHz = reshape(dyHz1d, nx, ny)
     elseif dtype == 3
-        u1x = zeros(nx)
-        du1x = zeros(nx)
-        u1y = zeros(ny)
-        du1y = zeros(ny)
         cdiff_x!(dxEy, Ey, Dx1d, u1x, du1x)
         cdiff_y!(dyEx, Ex, Dy1d, u1y, du1y)
         cdiff_x!(dxHz, Hz, Dx1d, u1x, du1x)
@@ -434,20 +430,28 @@ function waveguide_bcs(u)
     j = 1
     for i = 1:nx
         Ex[i,j] = 0.0
+        Ey[i,j] = (48.0*Ey[i,j+1] - 36.0*Ey[i,j+2] + 16.0*Ey[i,j+3] - 3.0*Ey[i,j+4])/25.0
+        Bz[i,j] = (48.0*Bz[i,j+1] - 36.0*Bz[i,j+2] + 16.0*Bz[i,j+3] - 3.0*Bz[i,j+4])/25.0
     end
  
     j = ny
     for i = 1:nx
         Ex[i,j] = 0.0
+        Ey[i,j] = (48.0*Ey[i,j-1] - 36.0*Ey[i,j-2] + 16.0*Ey[i,j-3] - 3.0*Ey[i,j-4])/25.0
+        Bz[i,j] = (48.0*Bz[i,j-1] - 36.0*Bz[i,j-2] + 16.0*Bz[i,j-3] - 3.0*Bz[i,j-4])/25.0
     end
 
     i = 1
     for j = 1:ny
         Ey[i,j] = 0.0
+        Ex[i,j] = (48.0*Ex[i+1,j] - 36.0*Ex[i+2,j] + 16.0*Ex[i+3,j] - 3.0*Ex[i+4,j])/25.0
+        Bz[i,j] = (48.0*Bz[i+1,j] - 36.0*Bz[i+2,j] + 16.0*Bz[i+3,j] - 3.0*Bz[i+4,j])/25.0
     end
 
     i = nx
     for j = 1:ny
         Ey[i,j] = 0.0
+        Ex[i,j] = (48.0*Ex[i-1,j] - 36.0*Ex[i-2,j] + 16.0*Ex[i-3,j] - 3.0*Ex[i-4,j])/25.0
+        Bz[i,j] = (48.0*Bz[i-1,j] - 36.0*Bz[i-2,j] + 16.0*Bz[i-3,j] - 3.0*Bz[i-4,j])/25.0
     end
 end

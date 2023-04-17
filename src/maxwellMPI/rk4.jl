@@ -31,24 +31,61 @@ function rk4_step!(func::Function, fields, t)
     thalf = tx + dthalf
     tnp1 = tx + dt
     dvars = fields.dvars
+    dtype = gh.dtype
+
+    hx = dxi[1]
+    hy = dxi[2]
+
+    kreissOliger = false
+    filter = false
+    if dtype == 0 || dtype == 1
+        kreissOliger = true
+    elseif dtype == 2 || dtype == 3
+        filter == true
+    end
+
 
     func(k1, un, dxu, dyu, xi, dxi, dvars, tx)
+    if kreissOliger
+         @. kodiss!(k1, un, hx, hy)
+    end
     @. rk4_helper(utmp, un, k1, dthalf)
+    if filter
+        @. cfilter!(utmp, dvars)
+    end
     waveguide_bcs(utmp)
     Maxwell2D.grid_sync!(utmp, gh, comm)
 
     func(k2, utmp, dxu, dyu, xi, dxi, dvars, thalf)
+    if kreissOliger
+         @. kodiss!(k2, utmp, hx, hy)
+    end
     @. rk4_helper(utmp, un, k2, dthalf)
+    if filter
+        @. cfilter!(utmp, dvars)
+    end
     waveguide_bcs(utmp)
     Maxwell2D.grid_sync!(utmp, gh, comm)
 
     func(k3, utmp, dxu, dyu, xi, dxi, dvars, thalf)
+    if kreissOliger
+         @. kodiss!(k3, utmp, hx, hy)
+    end
     @. rk4_helper(utmp, un, k3, dt)
+    if filter
+        @. cfilter!(utmp, dvars)
+    end
     waveguide_bcs(utmp)
     Maxwell2D.grid_sync!(utmp, gh, comm)
 
     func(k4, utmp, dxu, dyu, xi, dxi, dvars, tnp1)
+    if kreissOliger
+         @. kodiss!(k4, utmp, hx, hy)
+    end
     @. rk4_helper2(un, k1, k2, k3, k4, dt)
+    if filter
+        @. cfilter!(un, dvars)
+    end
     waveguide_bcs(un)
     Maxwell2D.grid_sync!(un, gh, comm)
 

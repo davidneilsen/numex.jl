@@ -155,7 +155,11 @@ function cdiff_x!(dxu, u, Dx, u1d, dxu1d)
         for i = 1:nx
             u1d[i] = u[i,j]
         end
-        dxu1d = Dx*u1d
+        #mul!(dxu1d, Dx, u1d)
+        dxu1d .= 0.0
+        for ii = 1:nx, jj = 1:nx
+            dxu1d[ii] += Dx[ii,jj]*u1d[jj]
+        end 
         for i = 1:nx
             dxu[i,j] = dxu1d[i]
         end
@@ -168,10 +172,61 @@ function cdiff_y!(dyu, u, Dy, u1d, dyu1d)
         for j = 1:ny
             u1d[j] = u[i,j]
         end
-        dyu1d = Dy*u1d
+        #mul!(dyu1d, Dy, u1d)
+        dyu1d .= 0.0
+        for ii = 1:ny
+            for jj = 1:ny
+                dyu1d[ii] += Dy[ii,jj]*u1d[jj]
+            end
+        end
         for j = 1:ny
             dyu[i,j] = dyu1d[j]
         end
     end
 end
+
+function cfilter!(u, dvars)
+    cfilter_x!(u, dvars.Fx, dvars.u1x, dvars.du1x)
+    cfilter_y!(u, dvars.Fy, dvars.u1y, dvars.du1y)
+end
+
+function cfilter_x!(u, F, uf1d, u1d)
+    nx, ny = size(u)
+    for j = 1:ny
+        for i = 1:nx
+            u1d[i] = u[i,j]
+        end
+        #mul!(dxu1d, Dx, u1d)
+        for ii = 1:nx
+            uf1d[ii] = 0.0
+            for jj = 1:nx
+                uf1d[ii] += F[ii,jj]*u1d[jj]
+            end 
+        end 
+        for i = 1:nx
+            u[i,j] = dxu1d[i]
+        end
+    end
+end
+
+function cfilter_y!(u, F, uf1d, u1d)
+    nx, ny = size(u)
+    for i = 1:nx
+        for j = 1:ny
+            u1d[j] = u[i,j]
+        end
+        #mul!(dyu1d, Dy, u1d)
+        for ii = 1:ny
+            uf1d[ii] = 0.0
+            for jj = 1:ny
+                uf1d[ii] += F[ii,jj]*u1d[jj]
+            end
+        end
+        for j = 1:ny
+            u[i,j] = uf1d[j]
+        end
+    end
+end
+
+
 

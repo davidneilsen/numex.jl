@@ -159,14 +159,17 @@ end
 struct DerivVars
 
     dtype :: Int
-    Dx1d :: BandedMatrix
-    Dy1d :: BandedMatrix
+    Dx1d :: Matrix
+    Dy1d :: Matrix
     Dx2d :: BandedBlockBandedMatrix
     Dy2d :: BandedBlockBandedMatrix
     u1x :: Vector{Float64}
     u1y :: Vector{Float64}
     du1x :: Vector{Float64}
     du1y :: Vector{Float64}
+
+    Fx1d :: BandedMatrix
+    Fy1d :: BandedMatrix
 
     function DerivVars(shp, dx0, dtype)
         nx = shp[1]
@@ -181,12 +184,17 @@ struct DerivVars
         Dx2d = BandedBlockBandedMatrix(Kron(Eye(ny), Dx))
         Dy2d = BandedBlockBandedMatrix(Kron(Dy, Eye(nx)))
 
+        Ax, Bx = filterKim6(nx)
+        Ay, By = filterKim6(ny)
+        Fx = Ax \ Bx
+        Fy = Ay \ By
+
         u1x = Vector{Float64}(undef, nx)
         u1y = Vector{Float64}(undef, ny)
         du1x = Vector{Float64}(undef, nx)
         du1y = Vector{Float64}(undef, ny)
 
-        new(dtype, Dx, Dy, Dx2d, Dy2d, u1x, u1y, du1x, du1y)
+        new(dtype, Dx, Dy, Dx2d, Dy2d, u1x, u1y, du1x, du1y, Fx, Fy)
     end 
 end
 

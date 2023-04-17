@@ -3,24 +3,24 @@ grid:
   xmax: 1.0
   ymin: 0.0
   ymax: 1.0
-  nx: 101
-  ny: 101
+  nx: 201
+  ny: 201
   ghostwidth: 2
 
 numerics:
-  itmax: 200
+  itmax: 8000
   cfl: 0.25
   # dtype -> 0-2nd, 1-4th, 2-2Dcfd, 3-1Dcfd
-  dtype: 1
+  dtype: 3
 
 initdata:
   idtype: 1
   idwg_bzamp: 1.0
   idwg_omega: 10.0
-  idwg_m_mode: 5
-  idwg_n_mode: 3
+  idwg_m_mode: 3
+  idwg_n_mode: 5
 
 output:
-  vtkfreq: 20
-  asciifreq: 5
+  vtkfreq: 10
+  asciifreq: 10
 

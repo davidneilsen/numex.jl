@@ -14,7 +14,8 @@ function evolve!(fields, pars)
 
     time = zeros(Float64,1)
     vtkFileCount::Int64 = 0
-    screenOutFreq = vtkOutFreq
+    screenOutFreq = min(pars["asciifreq"], vtkOutFreq)
+  
 
     gh = fields.gh
     lrank = gh.gridID
@@ -28,11 +29,22 @@ function evolve!(fields, pars)
     end
     #print("extents is ", extent)
 
-    gnrm = Maxwell2D.l2norm_global(fields.u[1],gh)
-    if lrank == 1
-        @printf("Step=%d, time=%g, |Ex|=%g\n",0, time[1], gnrm)
-    end
+    neqs = fields.neqs
+    gnrm = zeros(Float64, 2*neqs)
+    
     Maxwell2D.cal_error!(fields, time[1], pars)
+    for i = 1:neqs
+        gnrm[i] = Maxwell2D.l2norm_global(fields.u[i],gh)
+        gnrm[i+neqs] = Maxwell2D.l2norm_global(fields.u2[i],gh)
+    end
+
+    ioptr = Union{IOStream, Base.DevNull}
+
+    if lrank == 1
+        ioptr = open("maxwell_norms.dat", "w")
+        @printf(ioptr, "%g    %g    %g    %g    %g    %g    %g\n",time[1],gnrm[1],gnrm[2], gnrm[3], gnrm[4], gnrm[5], gnrm[6])
+        @printf("Step=%d, time=%g, |Ex|=%g\n",0, time[1], gnrm[1])
+    end
     filename = @sprintf("maxwell_%05d",vtkFileCount)
     pvtk_grid(filename, lx, ly; part=lrank, nparts=numRanks, extents=extent) do pvtk
         pvtk["proc",VTKPointData()] = fields.proc
@@ -48,12 +60,18 @@ function evolve!(fields, pars)
     for i = 1:nt
         #@printf("@@@ Step=%d, time=%g, |Bz|=%g\n",i,time[1],l2norm(fields.u[3]))
         Maxwell2D.rk4_step!(Maxwell2D.maxwell_TE!, fields, time)
-        gnrm = Maxwell2D.l2norm_global(fields.u[1],gh)
-        if lrank == 1 && mod(i,screenOutFreq)==0
-            @printf("Step=%d, time=%g, |Ex|=%g\n",i,time[1],gnrm)
+        if mod(i,screenOutFreq)==0
+            Maxwell2D.cal_error!(fields, time[1], pars)
+            for m = 1:neqs
+                gnrm[m] = Maxwell2D.l2norm_global(fields.u[m],gh)
+                gnrm[m+neqs] = Maxwell2D.l2norm_global(fields.u2[m],gh)
+            end
+            if lrank == 1
+                @printf("Step=%d, time=%g, |Ex|=%g\n",i,time[1],gnrm[1])
+                @printf(ioptr, "%12.5e     %12.5e    %12.5e    %12.5e    %12.5e    %12.5e    %12.5e\n",time[1],gnrm[1],gnrm[2], gnrm[3], gnrm[4], gnrm[5], gnrm[6])
+            end
         end
         if (mod(i,vtkOutFreq)==0)
-            Maxwell2D.cal_error!(fields, time[1], pars)
             vtkFileCount += 1
             filename = @sprintf("maxwell_%05d",vtkFileCount)
             pvtk_grid(filename, lx, ly; part=lrank, nparts=numRanks, extents=extent) do pvtk
@@ -67,6 +85,10 @@ function evolve!(fields, pars)
                 pvtk["time",VTKFieldData()] = time[1]
             end
         end
+    end
+
+    if lrank == 1
+        close(ioptr)
     end
 
 end

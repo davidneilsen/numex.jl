@@ -227,6 +227,7 @@ function l2norm_global(u::Array{Float64,2}, gh)
 
     gs = MPI.Reduce(s, MPI.SUM, gh.comm; root=0)
 
+    MPI.Barrier(gh.comm)
     if gh.rank == 0
         return sqrt(gs)
     else
