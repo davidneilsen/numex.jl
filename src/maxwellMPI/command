@@ -1,0 +1,1 @@
+/Users/dwn8/.julia/packages/MPI/N1m5D/bin/mpiexecjl -n 8 julia solver.jl id.yml

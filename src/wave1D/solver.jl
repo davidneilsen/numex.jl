@@ -1,6 +1,7 @@
 using Printf
 using ArgParse
 using Plots
+using WriteVTK
 
 include("Wave1D.jl")
 import .Wave1D
@@ -36,9 +37,17 @@ function evolve!(fields, nt, outFreq)
     aphi = Animation()
     xrange = (fields.grid.x[1],fields.grid.x[end])
     yrange = (-0.5,0.5)
+    vtkFileCount::Int64 = 0
 
     screenOutFreq = outFreq
     @printf("Step=%d, time=%g, |Pi|=%g\n",0.0,time[1],Wave1D.l2norm(fields.u[1]))
+    filename = @sprintf("wave_%05d",vtkFileCount)
+    vtk_grid(filename, fields.grid.x) do vtk
+       vtk["Pi",VTKPointData()] = fields.u[1]
+       vtk["Phi",VTKPointData()] = fields.u[2]
+       vtk["time",VTKFieldData()] = time[1]
+    end
+ 
     for i = 1:nt
         Wave1D.rk2_step!(Wave1D.waveEqs!, fields, time)
         if (mod(i,screenOutFreq)==0)
@@ -51,6 +60,15 @@ function evolve!(fields, nt, outFreq)
             plt2 = plot(fields.grid.x, fields.u[2], xlim=xrange, ylim=(-0.1,1.0), label="Phi", color = :blue)
             plt2 = scatter!(fields.grid.x, fields.u[2], label=" ", color=:yellow)
             frame(aphi, plt2)
+        end
+        if mod(i,OutFreq)==0
+            vtkFileCount += 1
+            filename = @sprintf("wave_%05d",vtkFileCount)
+            vtk_grid(filename, fields.grid.x) do vtk
+               vtk["Pi",VTKPointData()] = fields.u[1]
+               vtk["Phi",VTKPointData()] = fields.u[2]
+               vtk["time",VTKFieldData()] = time[1]
+            end
         end
     end
 

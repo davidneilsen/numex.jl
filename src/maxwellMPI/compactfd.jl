@@ -251,7 +251,11 @@ end
 
 #===============================================
 #
+#  These derivative coefficients come from Tables I and II of 
 #
+#  Jae Wook Kim, "Quasi-disjoint pentadiagonal matrix systems for 
+#  the parallelization of compact finite-difference schemes and 
+#  filters," Journal of Computational Physics 241 (2013) 168–194.
 #
 ================================================#
 function derivKim4(n, h)
@@ -369,7 +373,11 @@ end
 
 #===============================================
 #
+#  These filter coefficients come from Tables III and IV of 
 #
+#  Jae Wook Kim, "Quasi-disjoint pentadiagonal matrix systems for 
+#  the parallelization of compact finite-difference schemes and 
+#  filters," Journal of Computational Physics 241 (2013) 168–194.
 #
 ================================================#
 function filterKim6(n)
@@ -438,7 +446,21 @@ function filterKim6(n)
     Q[2,3] = 0.0
     Q[2,4] = 0.0
     Q[2,5] = 0.0
+
+    Q[3,1] = bF20
+    Q[3,2] = bF21
+    Q[3,3] = bF22
+    Q[3,4] = bF23
+    Q[3,5] = bF24
+    Q[3,6] = bF25
  
+    Q[n-2,n-5] = bF25
+    Q[n-2,n-4] = bF24
+    Q[n-2,n-3] = bF23
+    Q[n-2,n-2] = bF22
+    Q[n-2,n-1] = bF21
+    Q[n-2,n] = bF20
+
     Q[n-1,n-4] = 0.0
     Q[n-1,n-3] = 0.0
     Q[n-1,n-2] = 0.0
@@ -780,6 +802,14 @@ end
 #
 #
 ================================================#
+function debugL6(dxu, u, h)
+
+    s = 1
+    p = 2
+
+
+
+end
 
 #===============================================
 #

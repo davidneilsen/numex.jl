@@ -38,9 +38,9 @@ function rk4_step!(func::Function, fields, t)
 
     kreissOliger = false
     filter = false
-    if dtype == 0 || dtype == 1
+    if dtype == 0 || dtype == 1 || dtype == 2
         kreissOliger = true
-    elseif dtype == 2 || dtype == 3
+    elseif dtype == 3 || dtype == 4
         filter == true
     end
 

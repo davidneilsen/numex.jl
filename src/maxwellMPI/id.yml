@@ -8,10 +8,10 @@ grid:
   ghostwidth: 2
 
 numerics:
-  itmax: 200
+  itmax: 1000
   cfl: 0.25
-  # dtype -> 0-2nd, 1-4th, 2-2Dcfd, 3-1Dcfd
-  dtype: 1
+  # dtype -> 0-2nd, 1-4th, 2-6th, 3-2Dcfd, 4-1Dcfd
+  dtype: 2
 
 initdata:
   idtype: 1

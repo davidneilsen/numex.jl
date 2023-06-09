@@ -96,6 +96,151 @@ function diff42_y!(dyu, u, dy)
     end
 end
 
+function diff666_x!(Dxu, u, dx)
+    nx, ny = size(u)
+    idx = 1.00/dx
+    idx_by_60 = idx / 60.0
+    for j = 1:ny
+        i=1
+        Dxu[i,j] = ( - 147.0 * u[i,j]     
+                        + 360.0 * u[i+1,j]     
+                        - 450.0 * u[i+2,j]     
+                        + 400.0 * u[i+3,j]     
+                        - 225.0 * u[i+4,j]     
+                        +  72.0 * u[i+5,j]     
+                        -  10.0 * u[i+6,j]     
+                      ) * idx_by_60
+        i=2
+        Dxu[2,j] = (  -  10.0 * u[i-1,j]     
+                         -  77.0 * u[i  ,j]     
+                         + 150.0 * u[i+1,j]     
+                         - 100.0 * u[i+2,j]     
+                         +  50.0 * u[i+3,j]     
+                         -  15.0 * u[i+4,j]     
+                         +   2.0 * u[i+5,j]     
+                      ) * idx_by_60
+        i=3
+        Dxu[3,j] = (      2.0 * u[i-2,j]     
+                         -  24.0 * u[i-1,j]     
+                         -  35.0 * u[i  ,j]     
+                         +  80.0 * u[i+1,j]     
+                         -  30.0 * u[i+2,j]     
+                         +   8.0 * u[i+3,j]     
+                         -          u[i+4,j]     
+                      ) * idx_by_60
+        for i = 4:nx-3
+            Dxu[i,j] = ( -         u[i-3,j]     
+                          +  9.0 * u[i-2,j]     
+                          - 45.0 * u[i-1,j]     
+                          + 45.0 * u[i+1,j]     
+                          -  9.0 * u[i+2,j]     
+                          +         u[i+3,j]     
+                        ) * idx_by_60
+        end
+        i=nx-2
+        Dxu[i,j] = (            u[i-4,j]     
+                         -  8.0 * u[i-3,j]     
+                         + 30.0 * u[i-2,j]     
+                         - 80.0 * u[i-1,j]     
+                         + 35.0 * u[i  ,j]     
+                         + 24.0 * u[i+1,j]     
+                         -  2.0 * u[i+2,j]     
+                      ) * idx_by_60
+        i=nx-1
+        Dxu[i,j] = (  -   2.0 * u[i-5,j]     
+                         +  15.0 * u[i-4,j]     
+                         -  50.0 * u[i-3,j]     
+                         + 100.0 * u[i-2,j]     
+                         - 150.0 * u[i-1,j]     
+                         +  77.0 * u[i  ,j]     
+                         +  10.0 * u[i+1,j]     
+                       ) * idx_by_60
+        i=nx
+        Dxu[i,j] = (     10.0 * u[i-6,j]     
+                         -  72.0 * u[i-5,j]     
+                         + 225.0 * u[i-4,j]     
+                         - 400.0 * u[i-3,j]     
+                         + 450.0 * u[i-2,j]     
+                         - 360.0 * u[i-1,j]     
+                         + 147.0 * u[i,j]     
+                       ) * idx_by_60
+    end
+
+end
+
+function diff666_y!(Dyu, u, dy)
+    nx, ny = size(u)
+    idy = 1.00/dy
+    idy_by_60 = idy / 60.0
+    for i = 1:nx
+        j=1
+        Dyu[i,j] = ( - 147.0 * u[i,j]     
+                        + 360.0 * u[i,j+1]     
+                        - 450.0 * u[i,j+2]     
+                        + 400.0 * u[i,j+3]     
+                        - 225.0 * u[i,j+4]     
+                        +  72.0 * u[i,j+5]     
+                        -  10.0 * u[i,j+6]     
+                      ) * idy_by_60
+        j=2
+        Dyu[2] = (  -  10.0 * u[i,j-1]     
+                         -  77.0 * u[i,j  ]     
+                         + 150.0 * u[i,j+1]     
+                         - 100.0 * u[i,j+2]     
+                         +  50.0 * u[i,j+3]     
+                         -  15.0 * u[i,j+4]     
+                         +   2.0 * u[i,j+5]     
+                      ) * idy_by_60
+        j=3
+        Dyu[3] = (      2.0 * u[i,j-2]     
+                         -  24.0 * u[i,j-1]     
+                         -  35.0 * u[i,j  ]     
+                         +  80.0 * u[i,j+1]     
+                         -  30.0 * u[i,j+2]     
+                         +   8.0 * u[i,j+3]     
+                         -          u[i,j+4]     
+                      ) * idy_by_60
+        for j = 4:ny-3
+            Dyu[i,j] = ( -         u[i,j-3]     
+                          +  9.0 * u[i,j-2]     
+                          - 45.0 * u[i,j-1]     
+                          + 45.0 * u[i,j+1]     
+                          -  9.0 * u[i,j+2]     
+                          +        u[i,j+3]     
+                        ) * idy_by_60
+        end
+        j=ny-2
+        Dyu[i,j] = (            u[i,j-4]     
+                         -  8.0 * u[i,j-3]     
+                         + 30.0 * u[i,j-2]     
+                         - 80.0 * u[i,j-1]     
+                         + 35.0 * u[i,j  ]     
+                         + 24.0 * u[i,j+1]     
+                         -  2.0 * u[i,j+2]     
+                      ) * idy_by_60
+        j=ny-1
+        Dyu[i,j] = (  -   2.0 * u[i,j-5]     
+                         +  15.0 * u[i,j-4]     
+                         -  50.0 * u[i,j-3]     
+                         + 100.0 * u[i,j-2]     
+                         - 150.0 * u[i,j-1]     
+                         +  77.0 * u[i,j  ]     
+                         +  10.0 * u[i,j+1]     
+                       ) * idy_by_60
+        j=ny
+        Dyu[i,j] = (     10.0 * u[i,j-6]     
+                         -  72.0 * u[i,j-5]     
+                         + 225.0 * u[i,j-4]     
+                         - 400.0 * u[i,j-3]     
+                         + 450.0 * u[i,j-2]     
+                         - 360.0 * u[i,j-1]     
+                         + 147.0 * u[i,j]     
+                       ) * idy_by_60
+    end
+
+end
+
+
 function kodiss_nobndry!(f, u, dx, dy)
     nx, ny = size(f)
     sigma = 0.05
@@ -204,7 +349,7 @@ function cfilter_x!(u, F, uf1d, u1d)
             end 
         end 
         for i = 1:nx
-            u[i,j] = dxu1d[i]
+            u[i,j] += dxu1d[i]
         end
     end
 end
@@ -223,7 +368,7 @@ function cfilter_y!(u, F, uf1d, u1d)
             end
         end
         for j = 1:ny
-            u[i,j] = uf1d[j]
+            u[i,j] += uf1d[j]
         end
     end
 end

@@ -30,6 +30,12 @@ function get_params(fname)
     idwg_m_mode = data[key]["idwg_m_mode"]
     idwg_n_mode = data[key]["idwg_n_mode"]
 
+    if dtype == 1
+        dtype = min(2, dtype)
+    elseif dtype == 2
+        dtype = min(3, dtype)
+    end
+
     pint = zeros(Int64, n_params_int)
     pint[p_nx] = nx
     pint[p_ny] = ny

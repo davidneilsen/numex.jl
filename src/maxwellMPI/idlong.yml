@@ -8,10 +8,10 @@ grid:
   ghostwidth: 2
 
 numerics:
-  itmax: 8000
+  itmax: 50000
   cfl: 0.25
-  # dtype -> 0-2nd, 1-4th, 2-2Dcfd, 3-1Dcfd
-  dtype: 3
+  # dtype -> 0-2nd, 1-4th, 2-6th, 3-2Dcfd, 4-1Dcfd
+  dtype: 2
 
 initdata:
   idtype: 1
@@ -21,6 +21,6 @@ initdata:
   idwg_n_mode: 5
 
 output:
-  vtkfreq: 10
-  asciifreq: 10
+  vtkfreq: 500
+  asciifreq: 100
 

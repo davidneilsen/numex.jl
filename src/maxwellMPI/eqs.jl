@@ -180,6 +180,11 @@ function maxwell_TE!(dtu, u, dxu, dyu, xi, dxi, dvars, time)
         diff42_x!(dxEy, Ey, dx)
         diff42_y!(dyEx, Ex, dy)
     elseif dtype == 2
+        diff666_x!(dxHz, Hz, dx)
+        diff666_y!(dyHz, Hz, dy)
+        diff666_x!(dxEy, Ey, dx)
+        diff666_y!(dyEx, Ex, dy)
+    elseif dtype == 3
         Hz1d = vec(Hz)
         Ey1d = vec(Ey)
         Ex1d = vec(Ex)
@@ -191,7 +196,7 @@ function maxwell_TE!(dtu, u, dxu, dyu, xi, dxi, dvars, time)
         dyEx = reshape(dyEx1d, nx, ny)
         dxHz = reshape(dxHz1d, nx, ny)
         dyHz = reshape(dyHz1d, nx, ny)
-    elseif dtype == 3
+    elseif dtype == 4
         cdiff_x!(dxEy, Ey, Dx1d, u1x, du1x)
         cdiff_y!(dyEx, Ex, Dy1d, u1y, du1y)
         cdiff_x!(dxHz, Hz, Dx1d, u1x, du1x)
