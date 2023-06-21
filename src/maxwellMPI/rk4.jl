@@ -37,13 +37,14 @@ function rk4_step!(func::Function, fields, t)
     hy = dxi[2]
 
     kreissOliger = false
-    filter = false
+    filter = false 
     if dtype == 0 || dtype == 1 || dtype == 2
         kreissOliger = true
     elseif dtype == 3 || dtype == 4
-        filter == true
+        filter = true
     end
 
+    #println("RK4: filter = ",filter, ",   dtype = ",dtype)
 
     func(k1, un, dxu, dyu, xi, dxi, dvars, tx)
     if kreissOliger
