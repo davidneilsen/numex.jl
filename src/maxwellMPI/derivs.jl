@@ -331,8 +331,8 @@ function cdiff_y!(dyu, u, Dy, u1d, dyu1d)
 end
 
 function cfilter!(u, dvars)
-    cfilter_x!(u, dvars.Fx, dvars.u1x, dvars.du1x)
-    cfilter_y!(u, dvars.Fy, dvars.u1y, dvars.du1y)
+    cfilter_x!(u, dvars.Fx1d, dvars.u1x, dvars.du1x)
+    cfilter_y!(u, dvars.Fy1d, dvars.u1y, dvars.du1y)
 end
 
 function cfilter_x!(u, F, uf1d, u1d)
@@ -349,7 +349,7 @@ function cfilter_x!(u, F, uf1d, u1d)
             end 
         end 
         for i = 1:nx
-            u[i,j] += dxu1d[i]
+            u[i,j] += uf1d[i]
         end
     end
 end

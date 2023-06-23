@@ -11,7 +11,7 @@ numerics:
   itmax: 1000
   cfl: 0.25
   # dtype -> 0-2nd, 1-4th, 2-6th, 3-2Dcfd, 4-1Dcfd
-  dtype: 2
+  dtype: 4
 
 initdata:
   idtype: 1
