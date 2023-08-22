@@ -9,9 +9,11 @@ grid:
 
 numerics:
   itmax: 50000
-  cfl: 0.25
+  cfl: 0.10
   # dtype -> 0-2nd, 1-4th, 2-6th, 3-2Dcfd, 4-1Dcfd
   dtype: 4
+  # dissipation -> -2 pre-compact, -1 pre-KO, 2 post-compact
+  dissipation: 2
 
 initdata:
   idtype: 1

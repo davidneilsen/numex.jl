@@ -34,8 +34,9 @@ struct GH
     lcbox :: Array{Float64,DIM}
 
     dtype :: Int64
+    dissipation :: Int64
 
-    function GH( shp, bbox, cfl, size, dims, ghostwidth, comm, rank, difftype)
+    function GH( shp, bbox, cfl, size, dims, ghostwidth, comm, rank, difftype, dissipation)
 
         LTRACE = false
 
@@ -151,8 +152,9 @@ struct GH
         end
 
         dtype = difftype
+        diss = dissipation
 
-        new( shp, boxcount, bbox, ibox, cbox, gibox, gcbox, comm, comm_count, comm_partner, length1, length2, i1box, i2box, cfl, dt, dx0, size, ghostwidth, rank, gridID, lshp, loffset, lcoords, lcbox, dtype)
+        new( shp, boxcount, bbox, ibox, cbox, gibox, gcbox, comm, comm_count, comm_partner, length1, length2, i1box, i2box, cfl, dt, dx0, size, ghostwidth, rank, gridID, lshp, loffset, lcoords, lcbox, dtype, diss)
     end
 end
 
@@ -171,7 +173,9 @@ struct DerivVars
     Fx1d :: BandedMatrix
     Fy1d :: BandedMatrix
 
-    function DerivVars(shp, dx0, dtype)
+    dissipation :: Int
+
+    function DerivVars(shp, dx0, dtype, diss)
         nx = shp[1]
         ny = shp[2]
         hx = dx0[1]
@@ -194,7 +198,7 @@ struct DerivVars
         du1x = Vector{Float64}(undef, nx)
         du1y = Vector{Float64}(undef, ny)
 
-        new(dtype, Dx, Dy, Dx2d, Dy2d, u1x, u1y, du1x, du1y, Fx, Fy)
+        new(dtype, Dx, Dy, Dx2d, Dy2d, u1x, u1y, du1x, du1y, Fx, Fy, diss)
     end 
 end
 
@@ -236,7 +240,7 @@ struct GridFields
         end
 
         proc = zeros(nx,ny)
-        dvars = DerivVars(gh.lshp, gh.dx0, gh.dtype)
+        dvars = DerivVars(gh.lshp, gh.dx0, gh.dtype, gh.dissipation)
 
         new( neqs, gh, u, u2, dxu, dyu, wrk, proc, dvars)
 

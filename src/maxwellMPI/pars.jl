@@ -1,4 +1,4 @@
-const n_params_int = 10
+const n_params_int = 11
 const n_params_double = 6
 
 const p_nx=1
@@ -11,6 +11,7 @@ const p_idtype=7
 const p_idwg_m_mode=8
 const p_idwg_n_mode=9
 const p_asciifreq=10
+const p_dissipation=11
 
 const p_xmin=1
 const p_xmax=2

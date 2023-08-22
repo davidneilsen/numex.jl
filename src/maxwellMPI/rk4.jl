@@ -36,20 +36,19 @@ function rk4_step!(func::Function, fields, t)
     hx = dxi[1]
     hy = dxi[2]
 
-    kreissOliger = false
-    filter = false 
-    if dtype == 0 || dtype == 1 || dtype == 2
-        kreissOliger = true
-    elseif dtype == 3 || dtype == 4
-        filter = true
-    end
+    # dissipation controlled by diss
+    # -2 : compact dissipation performed before RK update.  Computed inside RHS routine in eqs.jl
+    # -1 : KO dissipation performed before RK update.  (The usual way)
+    # +1 : KO dissipation performed after RK update. (Not usually done, not coded up, and not really an option.)
+    # +2 : compact dissipation performed after RK update in RK4 routine.
+    diss = dvars.dissipation
 
     func(k1, un, dxu, dyu, xi, dxi, dvars, tx)
-    if kreissOliger
+    if diss == -1
          @. kodiss!(k1, un, hx, hy)
     end
     @. rk4_helper(utmp, un, k1, dthalf)
-    if filter
+    if diss == 2
         for m = 1:neqs
             cfilter!(utmp[m], dvars)
         end
@@ -58,11 +57,11 @@ function rk4_step!(func::Function, fields, t)
     Maxwell2D.grid_sync!(utmp, gh, comm)
 
     func(k2, utmp, dxu, dyu, xi, dxi, dvars, thalf)
-    if kreissOliger
+    if diss == -1
          @. kodiss!(k2, utmp, hx, hy)
     end
     @. rk4_helper(utmp, un, k2, dthalf)
-    if filter
+    if diss == 2
         for m = 1:neqs
             cfilter!(utmp[m], dvars)
         end
@@ -71,11 +70,11 @@ function rk4_step!(func::Function, fields, t)
     Maxwell2D.grid_sync!(utmp, gh, comm)
 
     func(k3, utmp, dxu, dyu, xi, dxi, dvars, thalf)
-    if kreissOliger
+    if diss == -1
          @. kodiss!(k3, utmp, hx, hy)
     end
     @. rk4_helper(utmp, un, k3, dt)
-    if filter
+    if diss == 2
         for m = 1:neqs
             cfilter!(utmp[m], dvars)
         end
@@ -84,11 +83,11 @@ function rk4_step!(func::Function, fields, t)
     Maxwell2D.grid_sync!(utmp, gh, comm)
 
     func(k4, utmp, dxu, dyu, xi, dxi, dvars, tnp1)
-    if kreissOliger
+    if diss == -1
          @. kodiss!(k4, utmp, hx, hy)
     end
     @. rk4_helper2(un, k1, k2, k3, k4, dt)
-    if filter
+    if diss == 2
         for m = 1:neqs
             cfilter!(un[m], dvars)
         end

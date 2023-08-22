@@ -18,6 +18,7 @@ function get_params(fname)
     itmax = data[key]["itmax"]
     cfl = data[key]["cfl"]
     dtype = data[key]["dtype"]
+    dissipation = data[key]["dissipation"]
 
     key = "output"
     vtkfreq = data[key]["vtkfreq"]
@@ -47,6 +48,7 @@ function get_params(fname)
     pint[p_idwg_m_mode] = idwg_m_mode
     pint[p_idwg_n_mode] = idwg_n_mode
     pint[p_asciifreq] = asciifreq
+    pint[p_dissipation] = dissipation
     
     preal = zeros(Float64, n_params_double)
     preal[p_xmin] = xmin
@@ -61,7 +63,7 @@ end
 
 function buildpars(pint, preal)
 
-    pars = Dict("itmax"=>pint[p_itmax], "vtkfreq"=>pint[p_vtkfreq], "asciifreq"=> pint[p_asciifreq], "ghostwidth"=>pint[p_ghostwidth], "dtype"=>pint[p_dtype], "idtype"=>pint[p_idtype], "idwg_m_mode"=>pint[p_idwg_m_mode], "idwg_n_mode"=>pint[p_idwg_n_mode], "cfl"=>preal[p_cfl], "idwg_bzamp"=>preal[p_idwg_bzamp])
+    pars = Dict("itmax"=>pint[p_itmax], "vtkfreq"=>pint[p_vtkfreq], "asciifreq"=> pint[p_asciifreq], "ghostwidth"=>pint[p_ghostwidth], "dtype"=>pint[p_dtype], "idtype"=>pint[p_idtype], "idwg_m_mode"=>pint[p_idwg_m_mode], "idwg_n_mode"=>pint[p_idwg_n_mode], "cfl"=>preal[p_cfl], "idwg_bzamp"=>preal[p_idwg_bzamp], "dissipation"=>pint[p_dissipation])
 
     return pars
 end

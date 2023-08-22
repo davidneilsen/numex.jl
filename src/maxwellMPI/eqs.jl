@@ -169,6 +169,13 @@ function maxwell_TE!(dtu, u, dxu, dyu, xi, dxi, dvars, time)
     du1x = dvars.du1x
     du1y = dvars.du1y
 
+    if dvars.dissipation == -2
+        # Apply compact filter to vars before taking derivatives
+        for m = 1:3
+            cfilter!(u[m], dvars)
+        end
+    end
+
     if dtype == 0
         diff22_x!(dxHz, Hz, dx)
         diff22_y!(dyHz, Hz, dy)

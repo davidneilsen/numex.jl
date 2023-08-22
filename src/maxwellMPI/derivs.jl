@@ -331,6 +331,7 @@ function cdiff_y!(dyu, u, Dy, u1d, dyu1d)
 end
 
 function cfilter!(u, dvars)
+    #println("...applying cfilter!")
     cfilter_x!(u, dvars.Fx1d, dvars.u1x, dvars.du1x)
     cfilter_y!(u, dvars.Fy1d, dvars.u1y, dvars.du1y)
 end

@@ -138,8 +138,9 @@ function main()
     bbox0[2,2] = params_double[p_ymax]
     cfl = params_double[p_cfl]
     ghostwidth = params_int[p_ghostwidth]
+    dissipation = params_int[p_dissipation]
 
-    gh = Maxwell2D.GH(shp0, bbox0, cfl, numRanks, dims, ghostwidth, comm, rank, dtype)
+    gh = Maxwell2D.GH(shp0, bbox0, cfl, numRanks, dims, ghostwidth, comm, rank, dtype, dissipation)
 
     if numRanks > 1 
         Maxwell2D.set_communication(gh) 
