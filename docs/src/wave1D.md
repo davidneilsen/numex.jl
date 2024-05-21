@@ -80,24 +80,36 @@ then the wave equation can be written
 
 ## Boundary Conditions
 
-The wave equation is solved on a domain $a < x < b$.  Boundary conditions
-must be given at the boundaries $x=a$ and $x=b$.  Sturm-Liouville theory
-shows that solutions exist if the boundary conditions are 
-Dirchlet, Neumann, Robin, or Periodic.
+The wave equation is solved on a finite domain $a < x < b$, and 
+boundary conditions (BCs) must be provided at the boundaries $x=a$ and $x=b$
+to give a well-defined problem.  In general, we can provide boundary
+information in four ways:  we can specify 
+  1. the the value of $\phi$ on the boundary (Dirichlet BC), 
+  2. the spatial derivative $\partial_x \phi$ (Neumann BC), 
+  3. a linear combination of $\phi$ and $\partial_x \phi$ (Robin BC), or
+  4. periodic boundary conditions.
 
 ### Fixed Boundary Condition
 
-The value of $\phi$ is specified at the boundary.  For example, a string
-with a fixed endpoint corresponds to the boundary condition $phi(L,t) = 0$.
+Assume that $\phi(x,t)$ represents the displacement of a string.  If 
+end of the string is fixed at $x=a$, then the boundary condition is 
+$\phi(a,t) = 0$.  This could be generalized to make the displacement of the
+string a known function of time, $\phi(a,t) = \phi_L(t)$.
+
 
 ### Open Boundary Condition
 
-
+If one end of the string is free or open, then the boundary condition
+is $\partial_x \phi = 0$.
 
 ### Sommerfeld Boundary Condition
 
-Characteristic boundary condition.
-
+The Sommerfeld boundary condition is an out-going condition to allow the
+wave to pass unchanged through the boundary.
+The coordinates $\xi$ and $\eta$ are the right-moving and left-moving
+characteristic directions.
+We can impose the condition $\partial_\xi \phi = 0$ on the left, and 
+$\partial_\eta \phi= 0$ on the right.
 
 
 ## Numerical Algorithm
