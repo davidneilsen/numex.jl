@@ -64,6 +64,19 @@ The system of equations that we will solve is
 \partial_t\Phi &= \partial_x \Pi.
 \end{align}
 ```
+Let $\bf y$ be the state vector
+```math
+{\bf y} = \begin{pmatrix} \Pi \\ \Phi \end{pmatrix}
+```
+and ${\bf f}({\bf y})$ be the RHS vector
+```math
+{\bf f}({\bf y}) = \begin{pmatrix} c\Phi \\ \Pi\end{pmatrix},
+```
+then the wave equation can be written
+```math
+\partial_t {\bf y} = \partial_x {\bf f}({\bf y}).
+```
+
 
 ## Boundary Conditions
 
@@ -94,19 +107,6 @@ use the Method of Lines.  In this method, we first write the equations
 as a semi-discrete system, where the spatial derivatives are discretized,
 while the time derivatives remain analytic.  This gives a set of ordinary
 differential equations (ODES) in time.
-
-Let $\bf y$ be the state vector
-```math
-{\bf y} = \begin{pmatrix} \Pi & \Phi \end{pmatrix}
-```
-and ${\bf f}({\bf y})$ be the RHS vector
-```math
-{\bf f}({\bf y}) = \begin{pmatrix} c\Phi & \Pi\end{pmatrix},
-```
-then the wave equation can be written
-```math
-\partial_t {\bf y} = \partial_x {\bf f}({\bf y}).
-```
 
 
 
