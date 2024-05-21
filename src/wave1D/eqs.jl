@@ -33,7 +33,7 @@ function waveEqs!(dtu, u, dxu, x, dx, time)
     diff22_x!(dxPhi, Phi, dx)
 
     dtPi[1] = idx*(Pi[2] - Pi[1])
-    dtPhi[1] = idx*(Pi[2] - Pi[1])
+    dtPhi[1] = idx*(Phi[2] - Phi[1])
 
     for i = 2:nx-1
         dtPi[i] = dxPhi[i]
