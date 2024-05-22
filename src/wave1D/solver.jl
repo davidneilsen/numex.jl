@@ -1,7 +1,26 @@
+#=------------------------------------------------------------------
+ =
+ =  A routine to run the code to solve the wave equation from the
+ =  command line.  This version of the code can output curve data
+ =  files that are read by VisIT for visualization.
+ =
+ = The code is run as
+ =
+ =                     julia solver.jl [optional args] <nsteps>
+ =
+ = where nsteps is a required argument for the number of integration steps. 
+ =
+ = The optional command line arguments are
+ =    -n <INT>  = number of points
+ =    -f <INT>  = frequency of output
+ =    -c <REAL> = CFL factor
+ =
+ -------------------------------------------------------------------=#
+
+
 using Printf
 using ArgParse
 using Plots
-using WriteVTK
 
 include("Wave1D.jl")
 import .Wave1D
@@ -37,16 +56,13 @@ function evolve!(fields, nt, outFreq)
     aphi = Animation()
     xrange = (fields.grid.x[1],fields.grid.x[end])
     yrange = (-0.5,0.5)
-    vtkFileCount::Int64 = 0
+    outFileCount::Int64 = 0
 
     screenOutFreq = outFreq
     @printf("Step=%d, time=%g, |Pi|=%g\n",0.0,time[1],Wave1D.l2norm(fields.u[1]))
-    filename = @sprintf("wave_%05d",vtkFileCount)
-    vtk_grid(filename, fields.grid.x) do vtk
-       vtk["Pi",VTKPointData()] = fields.u[1]
-       vtk["Phi",VTKPointData()] = fields.u[2]
-       vtk["time",VTKFieldData()] = time[1]
-    end
+    filename = @sprintf("wave_%05d",outFileCount)
+    unames = ["Pi", "Phi"]
+    Wave1D.output_curve(filename, unames, time[1], fields)
  
     for i = 1:nt
         Wave1D.rk2_step!(Wave1D.waveEqs!, fields, time)
@@ -61,14 +77,11 @@ function evolve!(fields, nt, outFreq)
             plt2 = scatter!(fields.grid.x, fields.u[2], label=" ", color=:yellow)
             frame(aphi, plt2)
         end
-        if mod(i,OutFreq)==0
-            vtkFileCount += 1
-            filename = @sprintf("wave_%05d",vtkFileCount)
-            vtk_grid(filename, fields.grid.x) do vtk
-               vtk["Pi",VTKPointData()] = fields.u[1]
-               vtk["Phi",VTKPointData()] = fields.u[2]
-               vtk["time",VTKFieldData()] = time[1]
-            end
+        if mod(i, outFreq)==0
+            outFileCount += 1
+            filename = @sprintf("wave_%05d",outFileCount)
+            Wave1D.output_curve(filename, unames, time[1], fields)
+
         end
     end
 

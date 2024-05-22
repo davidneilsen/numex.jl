@@ -1,3 +1,15 @@
+#=========================================================================
+ =
+ =  Finite Derivative Approximations
+ =
+ =========================================================================#
+
+
+#=------------------------------------------------------------------------
+ =
+ =  First derivative. Second order in the interior, first order on boundaries
+ =
+ =------------------------------------------------------------------------=#
 function diff21_x!(dxu, u, dx)
     nx = length(u)
     idx = 1.0/dx
@@ -10,6 +22,11 @@ function diff21_x!(dxu, u, dx)
     dxu[nx] = (u[nx] - u[nx-1])*idx
 end
 
+#=------------------------------------------------------------------------
+ =
+ =  First derivative. Second order in the interior, second order on boundaries
+ =
+ =------------------------------------------------------------------------=#
 function diff22_x!(dxu, u, dx)
     nx = length(u)
     idx = 1.0/dx
@@ -22,6 +39,11 @@ function diff22_x!(dxu, u, dx)
     dxu[nx] = (u[nx-2] - 4.0*u[nx-1] + 3.0*u[nx]) * idx_by_2
 end
 
+#=------------------------------------------------------------------------
+ =
+ =  First derivative. Fourth order in the interior, second order on boundaries
+ =
+ =------------------------------------------------------------------------=#
 function diff42_x!(dxu, u, dx)
     nx = length(u)
     idx = 1.0/dx
@@ -37,6 +59,16 @@ function diff42_x!(dxu, u, dx)
     dxu[nx] = (u[nx-2] - 4.0*u[nx-1] + 3.0*u[nx]) * idx_by_2
 end
 
+#=------------------------------------------------------------------------
+ =
+ =  Kreiss-Oliger dissipation operator for use with O(h^2) finite difference 
+ =  approximations.
+ =
+ =  This dissipation operator is the fourth derivative.  The dissipation
+ =  factor is hard-coded.  This should be changed so that the user can
+ =  easily change sigma.
+ =
+ =------------------------------------------------------------------------=#
 function kodiss!(f, u, dx)
 
     nx = length(f)
